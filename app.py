@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS & contournement du blocage d'images
+# Style CSS : Uniformisation stricte de la taille des images & masquage menus
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -77,12 +77,17 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
     
-    /* Arrondir et ajuster les images insérées dans les cartes */
+    /* UNIFORMISATION STRICTE DES IMAGES (Format 16:9 identique pour toutes les cartes) */
+    div[data-testid="stImage"] {
+        width: 100% !important;
+    }
     div[data-testid="stImage"] img {
         border-radius: 10px !important;
-        height: 180px !important;
         width: 100% !important;
+        height: 190px !important;
+        aspect-ratio: 16 / 9 !important;
         object-fit: cover !important;
+        display: block !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -149,7 +154,6 @@ def clean_url(url):
     return None
 
 def extract_image_url(entry):
-    # 1. Balises media
     if 'media_content' in entry and len(entry.media_content) > 0:
         for item in entry.media_content:
             url = clean_url(item.get('url'))
@@ -166,7 +170,6 @@ def extract_image_url(entry):
                 url = clean_url(enc.get('href'))
                 if url: return url
 
-    # 2. Analyse du HTML dans summary, description ET content
     html_sources = [
         entry.get('summary', ''),
         entry.get('description', '')
@@ -187,7 +190,6 @@ def extract_image_url(entry):
 
 @st.cache_data(ttl=3600)
 def fetch_image_data(url):
-    """Télécharge l'image directement si elle vient d'un domaine externe"""
     if not url or "picsum.photos" in url or "unsplash.com" in url:
         return url
     try:
@@ -200,7 +202,6 @@ def fetch_image_data(url):
     return None
 
 def get_unique_fallback(title):
-    """Génère une image d'illustration esthétique et unique par titre si le site n'en fournit pas"""
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
     return f"https://picsum.photos/seed/{seed}/600/350"
 
@@ -225,8 +226,6 @@ with st.spinner("Chargement des articles de Krea..."):
             
             extracted_url = extract_image_url(entry)
             img_data = fetch_image_data(extracted_url) if extracted_url else None
-            
-            # Utilise l'image extraite ou une image unique basée sur le titre de l'article
             final_img = img_data if img_data is not None else get_unique_fallback(title)
             
             if selected_category == "Tous":
