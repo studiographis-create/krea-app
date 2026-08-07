@@ -159,7 +159,7 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Masquer le bloc Affichage sur Smartphone et garder les boutons sur une seule ligne */
+    /* Masquer le bloc Affichage sur Smartphone et forcer l'alignement horizontal des boutons */
     @media (max-width: 768px) {
         div[data-testid="stColumn"]:has(#view-mode-marker) {
             display: none !important;
@@ -194,20 +194,19 @@ st.markdown("""
             overflow: hidden !important;
         }
 
-        /* ALIGNER LES 3 BOUTONS D'ACTION DES ARTICLES SUR UNE SEULE LIGNE SUR MOBILE */
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] {
+        /* FORCE LES BOUTONS D'ACTION (Lien, Aperçu, Favori) SUR UNE LIGNE */
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:has(button) {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            gap: 6px !important;
+            gap: 5px !important;
+            width: 100% !important;
         }
 
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
-            width: auto !important;
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:has(button) > div[data-testid="stColumn"] {
+            width: 33% !important;
+            flex: 1 !important;
             min-width: 0 !important;
-            flex: 1 1 auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
         }
     }
 
@@ -607,7 +606,7 @@ if filtered_articles:
                 with c1:
                     st.link_button("Lire l'article", hero['link'], use_container_width=True)
                 with c2:
-                    if st.button("📖 Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True):
+                    if st.button("Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True):
                         open_preview_modal(hero)
                 with c3:
                     is_fav = hero['link'] in st.session_state.bookmarks
@@ -644,7 +643,7 @@ if filtered_articles:
                     with c_read:
                         st.link_button("Lire", article['link'], use_container_width=True)
                     with c_prev:
-                        if st.button("📖", key=f"prev_{article['id']}", use_container_width=True):
+                        if st.button("Aperçu", key=f"prev_{article['id']}", use_container_width=True):
                             open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
@@ -676,7 +675,7 @@ if filtered_articles:
                     with c_read:
                         st.link_button("Lire l'article", article['link'], use_container_width=True)
                     with c_prev:
-                        if st.button("📖 Aperçu", key=f"prev_list_{article['id']}", use_container_width=True):
+                        if st.button("Aperçu", key=f"prev_list_{article['id']}", use_container_width=True):
                             open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
