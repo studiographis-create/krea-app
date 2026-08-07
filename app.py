@@ -4,6 +4,8 @@ import re
 import requests
 import hashlib
 import base64
+from datetime import datetime, timezone
+import time
 
 # Configuration de la page
 st.set_page_config(
@@ -12,11 +14,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Thème sombre, cartes et masquage des menus
+# Style CSS : Thème sombre, cartes, badges, et masquage des menus Streamlit
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
-    /* Masquer le header (Stop, Fork, GitHub) et le footer (badge/couronne) */
+    /* Masquer le header Streamlit (Stop, Fork, GitHub) et le footer */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -53,16 +55,30 @@ st.markdown("""
         background-color: #F472B6 !important;
     }
 
-    /* Style du champ de recherche */
-    div[data-testid="stTextInput"] input {
+    /* Champs de recherche et de sélection */
+    div[data-testid="stTextInput"] input, div[data-baseweb="select"] > div {
         background-color: #1e293b !important;
         color: #ffffff !important;
         border: 1px solid #334155 !important;
         border-radius: 10px !important;
     }
-    div[data-testid="stTextInput"] label p {
+    div[data-testid="stTextInput"] label p, div[data-testid="stSelectbox"] label p {
         color: #cbd5e1 !important;
         font-weight: 600 !important;
+    }
+
+    /* Bouton d'actualisation */
+    div[data-testid="stButton"] button {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border: 1px solid #334155 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease;
+    }
+    div[data-testid="stButton"] button:hover {
+        border-color: #F472B6 !important;
+        color: #F472B6 !important;
     }
 
     /* Style des cartes d'articles */
@@ -77,12 +93,30 @@ st.markdown("""
         border-color: #8b5cf6 !important;
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
+
+    /* Badges Meta (Source, Date, Temps) */
+    .hero-badge {
+        background-color: #F472B6;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 0.75rem;
+        padding: 3px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# Initialisation de la session pour les favoris
+if "bookmarks" not in st.session_state:
+    st.session_state.bookmarks = set()
+
 # Logo SVG Krea
 st.markdown("""
-<div style="margin-bottom: 25px;">
+<div style="margin-bottom: 20px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="340" style="max-width: 100%; height: auto;">
       <defs>
         <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -176,6 +210,61 @@ def extract_image_url(entry):
 
     return None
 
+def parse_entry_date(entry):
+    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+        return datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
+    if hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+        return datetime.fromtimestamp(time.mktime(entry.updated_parsed), tz=timezone.utc)
+    return datetime.now(timezone.utc)
+
+def format_relative_date(dt):
+    now = datetime.now(timezone.utc)
+    diff = now - dt
+    seconds = int(diff.total_seconds())
+    if seconds < 0 or seconds < 60:
+        return "À l'instant"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"Il y a {minutes} min"
+    hours = minutes // 60
+    if hours < 24:
+        return f"Il y a {hours} h"
+    days = hours // 24
+    if days < 7:
+        return f"Il y a {days} j"
+    return dt.strftime("%d/%m/%Y")
+
+def estimate_reading_time(text):
+    words = len(text.split())
+    mins = max(1, round(words / 35))
+    return f"⏱️ {mins} min"
+
+@st.cache_data(ttl=1800)
+def fetch_all_feeds():
+    articles = []
+    for feed in SOURCES:
+        parsed = feedparser.parse(feed["url"])
+        for entry in parsed.entries[:8]:
+            title = entry.get("title", "")
+            summary = clean_text(entry.get("summary", entry.get("description", "")))
+            dt = parse_entry_date(entry)
+            extracted_url = extract_image_url(entry)
+            
+            articles.append({
+                "id": hashlib.md5((entry.get("link", "#") + title).encode('utf-8')).hexdigest(),
+                "title": title,
+                "link": entry.get("link", "#"),
+                "source": feed["name"],
+                "summary": summary,
+                "date": dt,
+                "relative_date": format_relative_date(dt),
+                "reading_time": estimate_reading_time(summary),
+                "image_url": extracted_url
+            })
+    # Tri du plus récent au plus ancien
+    articles.sort(key=lambda x: x["date"], reverse=True)
+    return articles
+
 @st.cache_data(ttl=3600)
 def fetch_image_data(url):
     if not url or "picsum.photos" in url or "unsplash.com" in url:
@@ -194,70 +283,144 @@ def get_unique_fallback(title):
     return f"https://picsum.photos/seed/{seed}/600/350"
 
 def get_image_src(img_obj):
-    """Convertit les données brutes d'image en URL Data-URI pour affichage HTML direct"""
     if isinstance(img_obj, bytes):
         b64 = base64.b64encode(img_obj).decode('utf-8')
         return f"data:image/jpeg;base64,{b64}"
     return img_obj
 
-# Filtres de catégories
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
+# Charger tous les articles
+all_fetched = fetch_all_feeds()
+
+# Filtres de catégories + Onglet Favoris
+categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
-# Recherche par mot-clé
-search_query = st.text_input("🔍 Rechercher par mot-clé (ex: tutoriel, mise à jour, portrait...) :", "")
+# Barre d'outils : Source, Recherche, Bouton Actualiser
+col_source, col_search, col_refresh = st.columns([1.5, 2.5, 1])
+
+with col_source:
+    source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
+    selected_source = st.selectbox("Source :", source_options)
+
+with col_search:
+    search_query = st.text_input("🔍 Mot-clé :", "", placeholder="ex: tutoriel, mise à jour, portrait...")
+
+with col_refresh:
+    st.write("")
+    st.write("")
+    if st.button("🔄 Actualiser", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
 st.divider()
 
-all_articles = []
+# Filtrage des articles
+filtered_articles = []
+for art in all_fetched:
+    text_to_check = f"{art['title']} {art['summary']}".lower()
+    
+    # Filtre Favoris
+    if selected_category == "⭐ Favoris":
+        if art["link"] not in st.session_state.bookmarks:
+            continue
+        cat_match = True
+    elif selected_category == "Tous":
+        cat_match = True
+    else:
+        kw_list = KEYWORDS.get(selected_category, [])
+        cat_match = any(kw in text_to_check for kw in kw_list)
+        
+    # Filtre Source
+    if selected_source != "Toutes les sources" and art["source"] != selected_source:
+        source_match = False
+    else:
+        source_match = True
 
-with st.spinner("Chargement des articles de Krea..."):
-    for feed in SOURCES:
-        parsed = feedparser.parse(feed["url"])
-        for entry in parsed.entries[:6]:
-            title = entry.get("title", "")
-            summary = clean_text(entry.get("summary", entry.get("description", "")))
-            text_to_check = f"{title} {summary}".lower()
-            
-            extracted_url = extract_image_url(entry)
-            img_data = fetch_image_data(extracted_url) if extracted_url else None
-            final_img = img_data if img_data is not None else get_unique_fallback(title)
-            
-            if selected_category == "Tous":
-                cat_match = True
-            else:
-                kw_list = KEYWORDS.get(selected_category, [])
-                cat_match = any(kw in text_to_check for kw in kw_list)
-            
-            if not search_query.strip():
-                search_match = True
-            else:
-                search_match = search_query.lower().strip() in text_to_check
-                
-            if cat_match and search_match:
-                all_articles.append({
-                    "title": title,
-                    "link": entry.get("link", "#"),
-                    "source": feed["name"],
-                    "summary": summary[:160] + "..." if len(summary) > 160 else summary,
-                    "image": final_img
-                })
+    # Filtre Recherche
+    if not search_query.strip():
+        search_match = True
+    else:
+        search_match = search_query.lower().strip() in text_to_check
+        
+    if cat_match and source_match and search_match:
+        extracted_url = art["image_url"]
+        img_data = fetch_image_data(extracted_url) if extracted_url else None
+        final_img = img_data if img_data is not None else get_unique_fallback(art["title"])
+        
+        art_copy = art.copy()
+        art_copy["image"] = final_img
+        art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
+        filtered_articles.append(art_copy)
 
-if all_articles:
-    cols = st.columns(3)
-    for idx, article in enumerate(all_articles):
-        col = cols[idx % 3]
-        with col:
-            with st.container(border=True):
-                # Affichage HTML direct pour garantir 100% de la largeur du texte
-                img_src = get_image_src(article["image"])
+# AFFICHAGE
+if filtered_articles:
+    # 1. BANNIÈRE "À LA UNE" (Hero)
+    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip())
+    
+    start_idx = 0
+    if show_hero and len(filtered_articles) > 0:
+        hero = filtered_articles[0]
+        start_idx = 1
+        
+        with st.container(border=True):
+            st.markdown('<span class="hero-badge">🔥 À LA UNE</span>', unsafe_allow_html=True)
+            col_hero_img, col_hero_text = st.columns([1.2, 1])
+            with col_hero_img:
+                img_src = get_image_src(hero["image"])
                 st.markdown(
-                    f'<img src="{img_src}" style="width:100%; height:190px; object-fit:cover; border-radius:10px; margin-bottom:12px; display:block;">', 
+                    f'<img src="{img_src}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', 
                     unsafe_allow_html=True
                 )
-                st.caption(f"📍 {article['source']}")
-                st.markdown(f"**{article['title']}**")
-                st.write(article['summary'])
-                st.link_button("Lire l'article", article['link'], use_container_width=True)
+            with col_hero_text:
+                st.caption(f"📍 **{hero['source']}** • 🕒 {hero['relative_date']} • {hero['reading_time']}")
+                st.markdown(f"### {hero['title']}")
+                st.write(hero['summary'][:240] + "..." if len(hero['summary']) > 240 else hero['summary'])
+                
+                col_btn1, col_btn2 = st.columns([2, 1])
+                with col_btn1:
+                    st.link_button("Lire l'article complet", hero['link'], use_container_width=True)
+                with col_btn2:
+                    is_fav = hero['link'] in st.session_state.bookmarks
+                    fav_label = "⭐ Retirer" if is_fav else "☆ Favori"
+                    if st.button(fav_label, key=f"fav_hero_{hero['id']}", use_container_width=True):
+                        if is_fav:
+                            st.session_state.bookmarks.remove(hero['link'])
+                        else:
+                            st.session_state.bookmarks.add(hero['link'])
+                        st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+    # 2. GRILLE D'ARTICLES (3 colonnes)
+    grid_articles = filtered_articles[start_idx:]
+    if grid_articles:
+        cols = st.columns(3)
+        for idx, article in enumerate(grid_articles):
+            col = cols[idx % 3]
+            with col:
+                with st.container(border=True):
+                    img_src = get_image_src(article["image"])
+                    st.markdown(
+                        f'<img src="{img_src}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:block;">', 
+                        unsafe_allow_html=True
+                    )
+                    st.caption(f"📍 **{article['source']}** • {article['relative_date']}")
+                    st.markdown(f"**{article['title']}**")
+                    st.write(article['summary_short'])
+                    
+                    c_read, c_fav = st.columns([2, 1])
+                    with c_read:
+                        st.link_button("Lire", article['link'], use_container_width=True)
+                    with c_fav:
+                        is_fav = article['link'] in st.session_state.bookmarks
+                        fav_icon = "⭐" if is_fav else "☆"
+                        if st.button(fav_icon, key=f"fav_{article['id']}", use_container_width=True):
+                            if is_fav:
+                                st.session_state.bookmarks.remove(article['link'])
+                            else:
+                                st.session_state.bookmarks.add(article['link'])
+                            st.rerun()
+elif selected_category == "⭐ Favoris":
+    st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris. Cliquez sur le bouton ☆ sous un article pour l'ajouter ici.")
 else:
     st.info("Aucun article trouvé pour ces critères.")
