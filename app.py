@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Uniformisation stricte de la taille des images & masquage menus
+# Style CSS : Images en pleine largeur (100% du conteneur) + masque menus
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -69,7 +69,7 @@ st.markdown("""
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
-        padding: 10px !important;
+        padding: 12px !important;
         transition: all 0.2s ease-in-out;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {
@@ -77,15 +77,15 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
     
-    /* UNIFORMISATION STRICTE DES IMAGES (Format 16:9 identique pour toutes les cartes) */
+    /* IMAGES EN PLEINE LARGEUR DU CONTENEUR (100% alignées au texte) */
     div[data-testid="stImage"] {
         width: 100% !important;
+        margin-bottom: 8px !important;
     }
     div[data-testid="stImage"] img {
         border-radius: 10px !important;
         width: 100% !important;
-        height: 190px !important;
-        aspect-ratio: 16 / 9 !important;
+        height: 200px !important;
         object-fit: cover !important;
         display: block !important;
     }
