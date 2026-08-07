@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Mesh gradient, Glassmorphism, Bouton Scroll-to-Top & Responsive Rules
+# Style CSS : Mesh gradient, Glassmorphism & Responsive Rules
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -164,34 +164,6 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Style du bouton Flèche Retour en Haut */
-    #scrollTopBtn {
-        display: none;
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        z-index: 99999;
-        background-color: rgba(139, 92, 246, 0.85);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        outline: none;
-        cursor: pointer;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        font-size: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(8px);
-        transition: all 0.3s ease;
-        align-items: center;
-        justify-content: center;
-    }
-    #scrollTopBtn:hover {
-        background-color: #F472B6;
-        transform: translateY(-3px);
-        box-shadow: 0 6px 25px rgba(244, 114, 182, 0.4);
-    }
-
     /* Règles spécifiques Smartphone */
     @media (max-width: 768px) {
         /* Masquer le bloc Affichage */
@@ -199,25 +171,23 @@ st.markdown("""
             display: none !important;
         }
 
-        /* Aligner et coller le bouton d'installation à droite du logo sur mobile */
-        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) {
+        /* Aligner le bloc du Logo et le bouton d'installation sur la même ligne horizontale sur mobile */
+        div[data-testid="stHorizontalBlock"]:has(svg) {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            justify-content: space-between !important;
+            gap: 8px !important;
         }
-        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(1) {
+        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(1) {
+            flex: 3 !important;
+            width: auto !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) {
             flex: 1 !important;
             width: auto !important;
-        }
-        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) {
-            display: flex !important;
-            justify-content: flex-end !important;
-            width: auto !important;
-            flex: 0 0 auto !important;
             margin-top: 0 !important;
         }
-        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) button {
+        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) button {
             font-size: 0.68rem !important;
             padding: 4px 6px !important;
             white-space: nowrap !important;
@@ -301,24 +271,6 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
 </style>
-
-<!-- Bouton HTML & Script JS pour remonter en haut -->
-<button onclick="window.scrollTo({top: 0, behavior: 'smooth'});" id="scrollTopBtn" title="Retour en haut">▲</button>
-<script>
-    const scrollContainer = window.parent.document.querySelector('.main') || window;
-    const btn = window.parent.document.getElementById('scrollTopBtn');
-    
-    function toggleScrollBtn() {
-        const scrollPos = window.parent.pageYOffset || window.parent.document.documentElement.scrollTop || (scrollContainer.scrollTop !== undefined ? scrollContainer.scrollTop : window.pageYOffset);
-        if (scrollPos > 300) {
-            if (btn) btn.style.display = "flex";
-        } else {
-            if (btn) btn.style.display = "none";
-        }
-    }
-    
-    window.parent.addEventListener('scroll', toggleScrollBtn, true);
-</script>
 """, unsafe_allow_html=True)
 
 # Dialog pour installer l'application
@@ -347,7 +299,7 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea + Bouton Installation
+# Logo SVG Krea + Bouton Installation côte à côte sur mobile et PC
 col_logo, col_inst = st.columns([3.5, 1])
 with col_logo:
     st.markdown("""
