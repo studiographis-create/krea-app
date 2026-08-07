@@ -159,8 +159,9 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Masquer le bloc Affichage sur Smartphone et forcer l'alignement horizontal des boutons */
+    /* Règles spécifiques Smartphone */
     @media (max-width: 768px) {
+        /* Masquer le bloc Affichage */
         div[data-testid="stColumn"]:has(#view-mode-marker) {
             display: none !important;
         }
@@ -194,19 +195,26 @@ st.markdown("""
             overflow: hidden !important;
         }
 
-        /* FORCE LES BOUTONS D'ACTION (Lien, Aperçu, Favori) SUR UNE LIGNE */
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:has(button) {
+        /* FORCER LES BOUTONS D'ACTION SUR UNE SEULE LIGNE */
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            gap: 5px !important;
-            width: 100% !important;
+            gap: 4px !important;
         }
 
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"]:has(button) > div[data-testid="stColumn"] {
-            width: 33% !important;
-            flex: 1 !important;
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            width: auto !important;
+            flex: 1 1 0 !important;
             min-width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] button {
+            font-size: 0.75rem !important;
+            padding: 4px 2px !important;
+            white-space: nowrap !important;
         }
     }
 
