@@ -51,7 +51,7 @@ st.markdown("""
         background-color: transparent !important;
     }
 
-    /* Labels de tous les champs (Source, Mot-clé, Affichage, etc.) en blanc très clair et lisible */
+    /* Labels de tous les champs en blanc lisible */
     div[data-testid="stWidgetLabel"] p, label p, label {
         color: #ffffff !important;
         font-weight: 700 !important;
@@ -129,7 +129,7 @@ st.markdown("""
         box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
     }
 
-    /* Mise en évidence spécifique du bloc À LA UNE (Fond plus sombre & glassmorphism) */
+    /* Mise en évidence spécifique du bloc À LA UNE */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.hero-badge) {
         background-color: rgba(15, 23, 42, 0.92) !important;
         backdrop-filter: blur(16px) !important;
@@ -143,19 +143,24 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
+    /* Masquer le conteneur du marqueur invisible */
+    div[data-testid="stElementContainer"]:has(.tag-marker) {
+        display: none !important;
+    }
+
     /* Adaptation des boutons de tendances : 3 par ligne sur smartphone, 6 sur 1 ligne sur ordinateur */
     @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has(.tag-marker) {
+        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] {
             display: grid !important;
             grid-template-columns: repeat(3, 1fr) !important;
             gap: 6px !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tag-marker) > div[data-testid="stColumn"] {
+        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
             width: 100% !important;
             min-width: 0 !important;
             padding: 0 !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.tag-marker) button p {
+        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] button p {
             font-size: 0.82rem !important;
             white-space: nowrap !important;
         }
@@ -454,12 +459,14 @@ with col_refresh:
 
 # Mots-clés Tendances (Trending Tags)
 st.write("🔥 **Tendances du moment :**")
+
+# Placer le marqueur au-dessus de la grille des colonnes
+st.markdown('<span class="tag-marker"></span>', unsafe_allow_html=True)
+
 tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 for idx, tag in enumerate(tags):
     with tag_cols[idx]:
-        if idx == 0:
-            st.markdown('<span class="tag-marker"></span>', unsafe_allow_html=True)
         if st.button(f"#{tag}", use_container_width=True):
             st.session_state.search_input = tag
             st.rerun()
