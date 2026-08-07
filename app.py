@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique, thématique sombre et pastille rose unifiée
+# Style CSS : Fond graphique, thématique sombre et forçage STRICT du rose (#F472B6)
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -23,6 +23,11 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
+
+    /* Surcharge de la couleur primaire globale de Streamlit pour supprimer le rouge */
+    :root {
+        --primary-color: #F472B6 !important;
+    }
 
     /* Fond d'écran général avec effet mesh gradient créatif en haut de page */
     .stApp {
@@ -71,19 +76,23 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* Pastille sélectionnée rose identique au badge (#F472B6) */
-    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
+    /* FORÇAGE EXPLICITE DE LA PASTILLE RADIO ROSE (#F472B6) */
+    div[data-testid="stRadio"] [role="radiogroup"] [aria-checked="true"] {
         border-color: #F472B6 !important;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] * {
-        background-color: #F472B6 !important;
+    div[data-testid="stRadio"] [role="radiogroup"] [aria-checked="true"] * {
         border-color: #F472B6 !important;
-        fill: #F472B6 !important;
-        color: #F472B6 !important;
+        background-color: #F472B6 !important;
+    }
+    div[data-testid="stRadio"] div[data-baseweb="radio"] div {
+        border-color: #F472B6 !important;
     }
     div[data-testid="stRadio"] input[type="radio"]:checked + div {
         background-color: #F472B6 !important;
         border-color: #F472B6 !important;
+    }
+    div[data-testid="stRadio"] input[type="radio"] {
+        accent-color: #F472B6 !important;
     }
 
     /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
