@@ -170,7 +170,7 @@ st.markdown("""
 if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = set()
 
-# Logo SVG Krea (avec 'k' incliné et agrandi)
+# Logo SVG Krea (avec 'k' descendu et incliné)
 st.markdown("""
 <div style="margin-bottom: 20px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="340" style="max-width: 100%; height: auto;">
@@ -187,7 +187,7 @@ st.markdown("""
       <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
       <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
       <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
-        <text x="33" y="61" font-size="35" transform="rotate(-10 33 61)" text-anchor="middle">k</text>
+        <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
         <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
       </g>
       <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
