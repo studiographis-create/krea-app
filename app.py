@@ -240,15 +240,22 @@ KEYWORDS = {
     ]
 }
 
-BLACKLIST_REGIONS = {
+BLACKLIST_WORDS = {
     'luxembourg', 'liège', 'liege', 'namur', 'hainaut', 'brabant wallon', 'brabant', 
     'bruxelles', 'flandre', 'wallonie', 'anvers', 'limbourg', 'charleroi', 'mons', 
     'tournai', 'verviers', 'arlon', 'toutes les villes', 'toutes les provinces', 
-    'expositions', 'photos', 'accueil', 'agenda', 'voir plus'
+    'expositions', 'photos', 'accueil', 'agenda', 'voir plus', 'partager', 'suite'
 }
 
+# Image neutre élégante de galerie photo quand le site source n'en fournit pas
+EXPO_FALLBACK_IMAGE = "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80"
+
 def clean_text(raw_html):
-    return re.sub(r'<.*?>', '', raw_html)
+    if not raw_html:
+        return ""
+    text = re.sub(r'<.*?>', ' ', raw_html)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 def clean_url(url):
     if not url:
@@ -324,30 +331,119 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
+def scrape_quefaire_be():
+    url = "https://www.quefaire.be/expositions/52/photos/"
+    articles = []
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+        resp = requests.get(url, headers=headers, timeout=7)
+        if resp.status_code == 200:
+            html = resp.text
+            
+            # Découper le HTML par blocs d'éléments/liens
+            blocks = re.findall(r'<(?:div|li|article|tr)[^>]*>(.*?)</(?:div|li|article|tr)>', html, re.DOTALL | re.IGNORECASE)
+            seen_links = set()
+            
+            for block in blocks:
+                # Chercher un titre dans des balises fortes (h2, h3, h4, strong, a avec titre)
+                title_m = re.search(r'<h[234][^>]*>(.*?)</h[234]>', block, re.DOTALL) or \
+                          re.search(r'<a[^>]+class=["\'][^"\']*(?:title|heading|titre)[^"\']*["\'][^>]*>(.*?)</a>', block, re.DOTALL) or \
+                          re.search(r'<strong>(.*?)</strong>', block, re.DOTALL)
+                          
+                if not title_m:
+                    continue
+                    
+                title = clean_text(title_m.group(1))
+                if not title or len(title) < 6 or title.lower() in BLACKLIST_WORDS:
+                    continue
+                
+                # Extrait du lien direct de l'exposition (.php ou ID numérique)
+                link_m = re.search(r'href=["\']([^"\']*(?:\.php|\d{4,})[^"\']*)["\']', block)
+                if not link_m:
+                    continue
+                    
+                href = link_m.group(1)
+                if href in seen_links or href.rstrip('/').endswith(('photos', 'expositions', 'quefaire.be')):
+                    continue
+                    
+                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
+                
+                # Recherche de l'affiche / image dans le bloc
+                img_m = re.search(r'<img[^>]+(?:src|data-src)=["\']([^"\']+)["\']', block, re.IGNORECASE)
+                img_url = None
+                if img_m:
+                    src = img_m.group(1)
+                    if not any(bad in src.lower() for bad in ['logo', 'icon', 'star', 'banner', 'pixel']):
+                        img_url = src if src.startswith("http") else "https://www.quefaire.be/" + src.lstrip("/")
+                
+                # Extrait du résumé ou de la description
+                desc_m = re.search(r'<p[^>]*>(.*?)</p>', block, re.DOTALL) or re.search(r'<span[^>]*class=["\'][^"\']*(?:desc|info|detail)[^"\']*["\'][^>]*>(.*?)</span>', block, re.DOTALL)
+                summary = clean_text(desc_m.group(1)) if desc_m else ""
+                if not summary or len(summary) < 15:
+                    summary = f"Exposition photographique en Belgique : « {title} ». Retrouvez le lieu et les informations pratiques sur Quefaire.be."
+                
+                seen_links.add(href)
+                articles.append({
+                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
+                    "title": title,
+                    "link": full_href,
+                    "source": "Quefaire.be (Expos Photo)",
+                    "summary": summary,
+                    "date": datetime.now(timezone.utc),
+                    "relative_date": "Récemment",
+                    "reading_time": estimate_reading_time(summary),
+                    "image_url": img_url if img_url else EXPO_FALLBACK_IMAGE
+                })
+                if len(articles) >= 12:
+                    break
+    except Exception:
+        pass
+    return articles
+
 def scrape_out_be():
     url = "https://www.out.be/fr/c/expos/photographies/"
     articles = []
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        resp = requests.get(url, headers=headers, timeout=6)
+        resp = requests.get(url, headers=headers, timeout=7)
         if resp.status_code == 200:
             html = resp.text
-            links = re.findall(r'<a[^>]+href=["\'](/fr/[^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
+            
+            blocks = re.findall(r'<(?:article|div|li)[^>]*class=["\'][^"\']*(?:event|item|card|fiche|listing)[^"\']*["\'][^>]*>(.*?)</(?:article|div|li)>', html, re.DOTALL | re.IGNORECASE)
             seen_links = set()
-            for href, inner in links:
-                full_href = "https://www.out.be" + href
-                title = clean_text(inner).strip()
-                title_lower = title.lower()
-                
-                if not title or len(title) < 6 or title_lower in BLACKLIST_REGIONS or full_href in seen_links or href.rstrip('/').endswith('photographies'):
+            
+            for block in blocks:
+                title_m = re.search(r'<h[234][^>]*>(.*?)</h[234]>', block, re.DOTALL) or \
+                          re.search(r'<a[^>]+class=["\'][^"\']*(?:title|heading|titre)[^"\']*["\'][^>]*>(.*?)</a>', block, re.DOTALL)
+                          
+                if not title_m:
                     continue
-                
-                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
-                img_url = img_match.group(1) if img_match else None
-                if img_url and not img_url.startswith("http"):
-                    img_url = "https://www.out.be" + img_url
                     
-                summary = f"Exposition photographique à découvrir sur Out.be : {title}"
+                title = clean_text(title_m.group(1))
+                if not title or len(title) < 6 or title.lower() in BLACKLIST_WORDS:
+                    continue
+                    
+                link_m = re.search(r'href=["\'](/fr/e/[^"\']+)["\']', block) or re.search(r'href=["\']([^"\']+)["\']', block)
+                if not link_m:
+                    continue
+                    
+                href = link_m.group(1)
+                full_href = href if href.startswith("http") else "https://www.out.be" + href
+                if full_href in seen_links or "photographies" in href.split("/")[-1]:
+                    continue
+                    
+                img_m = re.search(r'<img[^>]+(?:src|data-src|data-original)=["\']([^"\']+)["\']', block, re.IGNORECASE)
+                img_url = None
+                if img_m:
+                    src = img_m.group(1)
+                    if not any(bad in src.lower() for bad in ['logo', 'icon', 'banner', 'pixel']):
+                        img_url = src if src.startswith("http") else "https://www.out.be" + src
+                        
+                desc_m = re.search(r'<p[^>]*>(.*?)</p>', block, re.DOTALL)
+                summary = clean_text(desc_m.group(1)) if desc_m else ""
+                if not summary or len(summary) < 15:
+                    summary = f"Exposition photo sur Out.be : « {title} ». Cliquez pour voir la programmation complète."
+                
                 seen_links.add(full_href)
                 articles.append({
                     "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
@@ -358,61 +454,9 @@ def scrape_out_be():
                     "date": datetime.now(timezone.utc),
                     "relative_date": "Récemment",
                     "reading_time": estimate_reading_time(summary),
-                    "image_url": img_url
+                    "image_url": img_url if img_url else EXPO_FALLBACK_IMAGE
                 })
-                if len(articles) >= 10:
-                    break
-    except Exception:
-        pass
-    return articles
-
-def scrape_quefaire_be():
-    url = "https://www.quefaire.be/expositions/52/photos/"
-    articles = []
-    try:
-        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        resp = requests.get(url, headers=headers, timeout=6)
-        if resp.status_code == 200:
-            html = resp.text
-            items = re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
-            seen_links = set()
-            for href, inner in items:
-                title = clean_text(inner).strip()
-                title_lower = title.lower()
-                
-                # Éliminer les filtres de villes/régions
-                if not title or len(title) < 6 or title_lower in BLACKLIST_REGIONS:
-                    continue
-                
-                # Exiger une URL d'événement valide (contenant un ID ou .php)
-                if not ("_" in href or ".php" in href or re.search(r'\d{4,}', href)):
-                    continue
-                if href.rstrip('/').endswith(('photos', 'liege', 'namur', 'luxembourg', 'hainaut', 'bruxelles', 'brabant')):
-                    continue
-                    
-                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
-                if full_href in seen_links:
-                    continue
-                
-                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
-                img_url = img_match.group(1) if img_match else None
-                if img_url and not img_url.startswith("http"):
-                    img_url = "https://www.quefaire.be/" + img_url.lstrip("/")
-                    
-                summary = f"Exposition photo en Belgique à découvrir : {title}"
-                seen_links.add(full_href)
-                articles.append({
-                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
-                    "title": title,
-                    "link": full_href,
-                    "source": "Quefaire.be (Expos Photo)",
-                    "summary": summary,
-                    "date": datetime.now(timezone.utc),
-                    "relative_date": "Récemment",
-                    "reading_time": estimate_reading_time(summary),
-                    "image_url": img_url
-                })
-                if len(articles) >= 10:
+                if len(articles) >= 12:
                     break
     except Exception:
         pass
