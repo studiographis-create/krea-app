@@ -2,6 +2,7 @@ import streamlit as st
 import feedparser
 import re
 import requests
+import hashlib
 
 # Configuration de la page
 st.set_page_config(
@@ -79,7 +80,8 @@ st.markdown("""
     /* Arrondir et ajuster les images insérées dans les cartes */
     div[data-testid="stImage"] img {
         border-radius: 10px !important;
-        max-height: 180px !important;
+        height: 180px !important;
+        width: 100% !important;
         object-fit: cover !important;
     }
 </style>
@@ -123,18 +125,6 @@ SOURCES = [
     {"name": "Korben", "url": "https://korben.info/feed"},
 ]
 
-# Images thématiques par défaut
-DEFAULT_IMAGES = {
-    "Photoshop": "https://images.unsplash.com/photo-1542744094-3a3172720177?w=600&auto=format&fit=crop&q=80",
-    "Lightroom": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80",
-    "InDesign": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
-    "Illustrator": "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&auto=format&fit=crop&q=80",
-    "AI": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80",
-    "Graphisme": "https://images.unsplash.com/photo-1600132806370-bf17e65e942f?w=600&auto=format&fit=crop&q=80",
-    "Photo": "https://images.unsplash.com/photo-1512790182412-b19e6d61b397?w=600&auto=format&fit=crop&q=80",
-    "Tous": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&auto=format&fit=crop&q=80"
-}
-
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement"],
@@ -153,12 +143,13 @@ def clean_url(url):
         return None
     url = url.strip()
     if url.startswith("http://") or url.startswith("https://"):
-        if any(bad in url.lower() for bad in ["gravatar", "1x1", "pixel", "icon", "logo", "emoji", ".svg"]):
+        if any(bad in url.lower() for bad in ["gravatar", "1x1", "pixel", "icon", "logo", "emoji", ".svg", "feedburner"]):
             return None
         return url
     return None
 
 def extract_image_url(entry):
+    # 1. Balises media
     if 'media_content' in entry and len(entry.media_content) > 0:
         for item in entry.media_content:
             url = clean_url(item.get('url'))
@@ -175,18 +166,29 @@ def extract_image_url(entry):
                 url = clean_url(enc.get('href'))
                 if url: return url
 
-    summary_raw = entry.get('summary', '') or entry.get('description', '')
-    img_match = re.search(r'<img [^>]*src=["\']([^"\']+)["\']', summary_raw)
-    if img_match:
-        url = clean_url(img_match.group(1))
-        if url: return url
+    # 2. Analyse du HTML dans summary, description ET content
+    html_sources = [
+        entry.get('summary', ''),
+        entry.get('description', '')
+    ]
+    if 'content' in entry and isinstance(entry.content, list):
+        for c in entry.content:
+            if isinstance(c, dict) and 'value' in c:
+                html_sources.append(c['value'])
+
+    for html_text in html_sources:
+        if html_text:
+            matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', html_text)
+            for src in matches:
+                url = clean_url(src)
+                if url: return url
 
     return None
 
 @st.cache_data(ttl=3600)
 def fetch_image_data(url):
-    """Télécharge l'image directement en Python pour contourner le blocage du navigateur"""
-    if not url or url.startswith("https://images.unsplash.com"):
+    """Télécharge l'image directement si elle vient d'un domaine externe"""
+    if not url or "picsum.photos" in url or "unsplash.com" in url:
         return url
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
@@ -196,6 +198,11 @@ def fetch_image_data(url):
     except Exception:
         pass
     return None
+
+def get_unique_fallback(title):
+    """Génère une image d'illustration esthétique et unique par titre si le site n'en fournit pas"""
+    seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
+    return f"https://picsum.photos/seed/{seed}/600/350"
 
 # Filtres de catégories
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
@@ -219,8 +226,8 @@ with st.spinner("Chargement des articles de Krea..."):
             extracted_url = extract_image_url(entry)
             img_data = fetch_image_data(extracted_url) if extracted_url else None
             
-            fallback_img = DEFAULT_IMAGES.get(selected_category, DEFAULT_IMAGES["Tous"])
-            final_img = img_data if img_data is not None else fallback_img
+            # Utilise l'image extraite ou une image unique basée sur le titre de l'article
+            final_img = img_data if img_data is not None else get_unique_fallback(title)
             
             if selected_category == "Tous":
                 cat_match = True
