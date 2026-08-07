@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS (liste complète enrichie)
+# Sources RSS
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -232,7 +232,7 @@ KEYWORDS = {
     "Graphisme": ["design", "graphiste", "logo", "branding", "couleur", "typographie", "création"],
     "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"],
     "Tutoriels": ["tuto", "tutoriel", "guide", "astuce", "formation", "apprendre", "cours", "technique"],
-    "Expositions": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste", "photos"]
+    "Expos photos": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste", "photos"]
 }
 
 def clean_text(raw_html):
@@ -363,8 +363,8 @@ def get_image_src(img_obj):
 # Charger tous les articles
 all_fetched = fetch_all_feeds()
 
-# Filtres de catégories (avec Tutoriels et Expositions) + Onglet Favoris
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expositions", "⭐ Favoris"]
+# Filtres de catégories (avec "Expos photos") + Onglet Favoris
+categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 # Barre d'outils : Source, Recherche, Bouton Actualiser
