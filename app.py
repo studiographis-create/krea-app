@@ -9,9 +9,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Lisibilité, pastille rose (#F472B6) et champ de recherche stylisé
+# Style CSS : Lisibilité, pastille rose (#F472B6), champ de recherche et masquage du header/footer Streamlit
 st.markdown("""
 <style>
+    /* Masquer le header Streamlit (Stop, Fork, GitHub) et le footer (badge/couronne) */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    div[data-testid="stDecoration"] {display: none;}
+
     .stApp {
         background-color: #0b0f19;
         color: #f1f5f9;
@@ -100,7 +106,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources enrichies (10 flux RSS créatifs)
+# Sources RSS
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -127,11 +133,11 @@ KEYWORDS = {
 def clean_text(raw_html):
     return re.sub(r'<.*?>', '', raw_html)
 
-# Barre des filtres de catégories
+# Filtres de catégories
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
-# Barre de recherche par mot-clé
+# Recherche par mot-clé
 search_query = st.text_input("🔍 Rechercher par mot-clé (ex: tutoriel, mise à jour, portrait...) :", "")
 
 st.divider()
@@ -146,14 +152,12 @@ with st.spinner("Chargement des articles de Krea..."):
             summary = clean_text(entry.get("summary", entry.get("description", "")))
             text_to_check = f"{title} {summary}".lower()
             
-            # 1. Filtre catégorie
             if selected_category == "Tous":
                 cat_match = True
             else:
                 kw_list = KEYWORDS.get(selected_category, [])
                 cat_match = any(kw in text_to_check for kw in kw_list)
             
-            # 2. Filtre recherche textuelle
             if not search_query.strip():
                 search_match = True
             else:
