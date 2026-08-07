@@ -3,6 +3,8 @@ import feedparser
 import re
 import requests
 import hashlib
+import json
+import urllib.parse
 from datetime import datetime, timezone
 import time
 
@@ -13,17 +15,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique, thématique sombre et forçage du rose (#F472B6)
+# Style CSS : Mesh gradient, Glassmorphism & Animations Hover Lift
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
-    /* Masquer le header Streamlit (Stop, Fork, GitHub) et le footer */
+    /* Masquer le header Streamlit et le footer */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
 
-    /* Fond d'écran général avec effet mesh gradient créatif en haut de page */
+    /* Fond d'écran général avec mesh gradient */
     .stApp {
         background-color: #0b0f19;
         background-image: 
@@ -35,7 +37,7 @@ st.markdown("""
         color: #f1f5f9;
     }
     
-    /* Personnalisation de l'indicateur de chargement (Spinner / Running) */
+    /* Indicator Loading / Status Widget */
     div[data-testid="stStatusWidget"], [data-testid="stSpinner"], div[data-testid="stStatusWidget"] > div {
         background-color: rgba(30, 41, 59, 0.85) !important;
         backdrop-filter: blur(8px) !important;
@@ -49,11 +51,10 @@ st.markdown("""
         background-color: transparent !important;
     }
 
-    /* Bloc de sélection des catégories avec fond glassmorphism */
+    /* Radio Filter Bar */
     div[data-testid="stRadio"] {
         background-color: rgba(30, 41, 59, 0.75) !important;
         backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
         padding: 14px 20px !important;
         border-radius: 14px !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -62,15 +63,12 @@ st.markdown("""
     div[data-testid="stRadio"] label {
         color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
     }
     div[data-testid="stRadio"] p {
         color: #cbd5e1 !important;
-        font-size: 0.95rem !important;
         font-weight: 700 !important;
     }
 
-    /* FORÇAGE DE LA COULEUR DU BOUTON RADIO ACTIF */
     div[data-testid="stRadio"] div[data-baseweb="radio"] div:first-child {
         background-color: transparent !important;
         border-color: #F472B6 !important;
@@ -79,16 +77,8 @@ st.markdown("""
         background-color: #F472B6 !important;
         border-color: #F472B6 !important;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] label div[aria-checked="true"] {
-        background-color: #F472B6 !important;
-        border-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] [data-baseweb="radio"] [aria-checked="true"] {
-        background-color: #F472B6 !important;
-        border-color: #F472B6 !important;
-    }
 
-    /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
+    /* Input & Select Box styling */
     div[data-testid="stTextInput"] input {
         background-color: #f8fafc !important;
         color: #0f172a !important;
@@ -96,36 +86,23 @@ st.markdown("""
         border-radius: 10px !important;
         font-weight: 500 !important;
     }
-    div[data-testid="stTextInput"] input::placeholder {
-        color: #64748b !important;
-        opacity: 1 !important;
-    }
     div[data-baseweb="select"] > div {
         background-color: #f8fafc !important;
         color: #0f172a !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 10px !important;
     }
-    div[data-baseweb="select"] * {
-        color: #0f172a !important;
-    }
-    div[data-testid="stTextInput"] label p, div[data-testid="stSelectbox"] label p {
-        color: #cbd5e1 !important;
-        font-weight: 600 !important;
-    }
+    div[data-baseweb="select"] * { color: #0f172a !important; }
 
-    /* UNIFORMISATION SOMBRE DE TOUS LES BOUTONS ("Lire", "Favori", "Actualiser") */
+    /* Button Styling */
     div[data-testid="stLinkButton"] a, div[data-testid="stButton"] button {
         background-color: rgba(30, 41, 59, 0.85) !important;
         color: #f1f5f9 !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
-        transition: all 0.2s ease !important;
+        transition: all 0.25s ease !important;
         text-decoration: none !important;
-    }
-    div[data-testid="stLinkButton"] a p, div[data-testid="stButton"] button p {
-        color: #f1f5f9 !important;
     }
     div[data-testid="stLinkButton"] a:hover, div[data-testid="stButton"] button:hover {
         border-color: #F472B6 !important;
@@ -133,24 +110,34 @@ st.markdown("""
         background-color: rgba(30, 41, 59, 0.95) !important;
         box-shadow: 0 0 15px rgba(244, 114, 182, 0.3) !important;
     }
-    div[data-testid="stLinkButton"] a:hover p, div[data-testid="stButton"] button:hover p {
-        color: #F472B6 !important;
-    }
 
-    /* Style des cartes d'articles */
+    /* Cards - Hover Lift & Glow Effect */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
         padding: 14px !important;
-        transition: all 0.2s ease-in-out;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        transform: translateY(-5px) !important;
         border-color: #8b5cf6 !important;
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
+        box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
     }
 
-    /* Badges Meta */
+    /* Category Badges Styling */
+    .cat-badge {
+        font-size: 0.70rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #0f172a;
+        display: inline-block;
+        margin-bottom: 6px;
+    }
+
     .hero-badge {
         background-color: #F472B6;
         color: #0f172a;
@@ -159,18 +146,19 @@ st.markdown("""
         padding: 3px 10px;
         border-radius: 20px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         display: inline-block;
         margin-bottom: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialisation de la session pour les favoris
+# Initialisation de la session
 if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = set()
+if "search_input" not in st.session_state:
+    st.session_state.search_input = ""
 
-# Logo SVG Krea (avec 'k' descendu et incliné)
+# Logo SVG Krea (avec 'k' incliné et descendu)
 st.markdown("""
 <div style="margin-bottom: 20px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="340" style="max-width: 100%; height: auto;">
@@ -197,7 +185,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS 100% fiables et structurées
+# Sources RSS 100% fiables
 SOURCES = [
     {"name": "Info-Lux", "url": "https://www.info-lux.com/feed/"},
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
@@ -239,6 +227,19 @@ KEYWORDS = {
         "artiste", "artistes", "photos", "photographies", "photographe", "photographes",
         "retrospective", "rétrospective"
     ]
+}
+
+CATEGORY_COLORS = {
+    "Photoshop": "#38BDF8",
+    "Lightroom": "#60A5FA",
+    "InDesign": "#F43F5E",
+    "Illustrator": "#FB923C",
+    "AI": "#A855F7",
+    "Graphisme": "#EC4899",
+    "Photo": "#F59E0B",
+    "Tutoriels": "#10B981",
+    "Expos photos": "#E11D48",
+    "Général": "#64748B"
 }
 
 def clean_text(raw_html):
@@ -322,9 +323,39 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
+def detect_article_category(title, summary):
+    text = f"{title} {summary}".lower()
+    for cat, kws in KEYWORDS.items():
+        if any(kw in text for kw in kws):
+            return cat
+    return "Général"
+
 def get_unique_fallback(title):
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
     return f"https://picsum.photos/seed/{seed}/600/350"
+
+@st.dialog("📖 Aperçu de l'article")
+def open_preview_modal(article):
+    if article.get("image_url"):
+        st.markdown(
+            f'<img src="{article["image_url"]}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:12px;">', 
+            unsafe_allow_html=True
+        )
+    st.markdown(f"### {article['title']}")
+    st.caption(f"📍 **{article['source']}** • 🕒 {article['relative_date']} • {article['reading_time']}")
+    st.write(article['summary'])
+    st.divider()
+    
+    encoded_url = urllib.parse.quote(article['link'])
+    encoded_title = urllib.parse.quote(article['title'])
+    
+    col_open, col_wa, col_x = st.columns([2, 1, 1])
+    with col_open:
+        st.link_button("🌐 Ouvrir le site d'origine", article['link'], use_container_width=True)
+    with col_wa:
+        st.link_button("💬 WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
+    with col_x:
+        st.link_button("𝕏 Share", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
 
 @st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
 def fetch_all_feeds():
@@ -338,6 +369,7 @@ def fetch_all_feeds():
                 dt = parse_entry_date(entry)
                 extracted_url = extract_image_url(entry)
                 
+                cat = detect_article_category(title, summary)
                 articles.append({
                     "id": hashlib.md5((entry.get("link", "#") + title).encode('utf-8')).hexdigest(),
                     "title": title,
@@ -347,6 +379,7 @@ def fetch_all_feeds():
                     "date": dt,
                     "relative_date": format_relative_date(dt),
                     "reading_time": estimate_reading_time(summary),
+                    "category": cat,
                     "image_url": extracted_url if extracted_url else get_unique_fallback(title)
                 })
         except Exception:
@@ -362,15 +395,18 @@ all_fetched = fetch_all_feeds()
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
-# Barre d'outils : Source, Recherche, Bouton Actualiser
-col_source, col_search, col_refresh = st.columns([1.5, 2.5, 1])
+# Barre d'outils : Source, Recherche, Mode Affichage, Bouton Actualiser
+col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
 
 with col_source:
     source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
     selected_source = st.selectbox("Source :", source_options)
 
 with col_search:
-    search_query = st.text_input("🔍 Mot-clé :", "", placeholder="ex: tutoriel, mise à jour, portrait...")
+    search_query = st.text_input("🔍 Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
+
+with col_view:
+    view_mode = st.radio("Affichage :", ["🎴 Grille", "📑 Liste compacte"], horizontal=True)
 
 with col_refresh:
     st.write("")
@@ -378,6 +414,16 @@ with col_refresh:
     if st.button("🔄 Actualiser", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
+
+# Mots-clés Tendances (Trending Tags)
+st.write("🔥 **Tendances du moment :**")
+tag_cols = st.columns(6)
+tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
+for idx, tag in enumerate(tags):
+    with tag_cols[idx]:
+        if st.button(f"#{tag}", use_container_width=True):
+            st.session_state.search_input = tag
+            st.rerun()
 
 st.divider()
 
@@ -420,15 +466,31 @@ for art in all_fetched:
         art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
         filtered_articles.append(art_copy)
 
+# Exportation des favoris si on est dans l'onglet favoris
+if selected_category == "⭐ Favoris" and filtered_articles:
+    col_fav_title, col_fav_exp = st.columns([3, 1])
+    with col_fav_title:
+        st.subheader(f"📌 Vos articles favoris ({len(filtered_articles)})")
+    with col_fav_exp:
+        json_favs = json.dumps(filtered_articles, indent=2, ensure_ascii=False)
+        st.download_button(
+            "📥 Exporter les favoris (JSON)",
+            data=json_favs,
+            file_name="favoris_krea.json",
+            mime="application/json",
+            use_container_width=True
+        )
+
 # AFFICHAGE
 if filtered_articles:
-    # 1. BANNIÈRE "À LA UNE" (Hero)
-    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip())
+    # 1. BANNIÈRE "À LA UNE" (Hero - uniquement en mode Grille)
+    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "🎴 Grille")
     
     start_idx = 0
     if show_hero and len(filtered_articles) > 0:
         hero = filtered_articles[0]
         start_idx = 1
+        cat_color = CATEGORY_COLORS.get(hero['category'], "#64748B")
         
         with st.container(border=True):
             st.markdown('<span class="hero-badge">🔥 À LA UNE</span>', unsafe_allow_html=True)
@@ -439,17 +501,21 @@ if filtered_articles:
                     unsafe_allow_html=True
                 )
             with col_hero_text:
+                st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{hero["category"]}</span>', unsafe_allow_html=True)
                 st.caption(f"📍 **{hero['source']}** • 🕒 {hero['relative_date']} • {hero['reading_time']}")
                 st.markdown(f"### {hero['title']}")
-                st.write(hero['summary'][:240] + "..." if len(hero['summary']) > 240 else hero['summary'])
+                st.write(hero['summary'][:220] + "..." if len(hero['summary']) > 220 else hero['summary'])
                 
-                col_btn1, col_btn2 = st.columns([2, 1])
-                with col_btn1:
-                    st.link_button("Lire l'article complet", hero['link'], use_container_width=True)
-                with col_btn2:
+                c1, c2, c3 = st.columns([1.5, 1, 1])
+                with c1:
+                    st.link_button("Lire l'article", hero['link'], use_container_width=True)
+                with c2:
+                    if st.button("📖 Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True):
+                        open_preview_modal(hero)
+                with c3:
                     is_fav = hero['link'] in st.session_state.bookmarks
-                    fav_label = "⭐ Retirer" if is_fav else "☆ Favori"
-                    if st.button(fav_label, key=f"fav_hero_{hero['id']}", use_container_width=True):
+                    fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
+                    if st.button(fav_icon, key=f"fav_hero_{hero['id']}", use_container_width=True):
                         if is_fav:
                             st.session_state.bookmarks.remove(hero['link'])
                         else:
@@ -458,25 +524,31 @@ if filtered_articles:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. GRILLE D'ARTICLES (3 colonnes)
+    # 2. AFFICHAGE DES ARTICLES (Grille vs Liste Compacte)
     grid_articles = filtered_articles[start_idx:]
-    if grid_articles:
+    
+    if view_mode == "🎴 Grille":
         cols = st.columns(3)
         for idx, article in enumerate(grid_articles):
             col = cols[idx % 3]
+            cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
             with col:
                 with st.container(border=True):
                     st.markdown(
-                        f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:block;">', 
+                        f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:8px; display:block;">', 
                         unsafe_allow_html=True
                     )
+                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>', unsafe_allow_html=True)
                     st.caption(f"📍 **{article['source']}** • {article['relative_date']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
                     
-                    c_read, c_fav = st.columns([2, 1])
+                    c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
                     with c_read:
                         st.link_button("Lire", article['link'], use_container_width=True)
+                    with c_prev:
+                        if st.button("📖", key=f"prev_{article['id']}", use_container_width=True):
+                            open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
                         fav_icon = "⭐" if is_fav else "☆"
@@ -486,6 +558,39 @@ if filtered_articles:
                             else:
                                 st.session_state.bookmarks.add(article['link'])
                             st.rerun()
+
+    else: # MODE LISTE COMPACTE
+        for article in grid_articles:
+            cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
+            with st.container(border=True):
+                c_img, c_content = st.columns([0.8, 3.2])
+                with c_img:
+                    st.markdown(
+                        f'<img src="{article["image_url"]}" style="width:100%; height:110px; object-fit:cover; border-radius:8px; display:block;">', 
+                        unsafe_allow_html=True
+                    )
+                with c_content:
+                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>', unsafe_allow_html=True)
+                    st.caption(f"📍 **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
+                    st.markdown(f"**{article['title']}**")
+                    st.write(article['summary_short'])
+                    
+                    c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
+                    with c_read:
+                        st.link_button("Lire l'article", article['link'], use_container_width=True)
+                    with c_prev:
+                        if st.button("📖 Aperçu", key=f"prev_list_{article['id']}", use_container_width=True):
+                            open_preview_modal(article)
+                    with c_fav:
+                        is_fav = article['link'] in st.session_state.bookmarks
+                        fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
+                        if st.button(fav_icon, key=f"fav_list_{article['id']}", use_container_width=True):
+                            if is_fav:
+                                st.session_state.bookmarks.remove(article['link'])
+                            else:
+                                st.session_state.bookmarks.add(article['link'])
+                            st.rerun()
+
 elif selected_category == "⭐ Favoris":
     st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris. Cliquez sur le bouton ☆ sous un article pour l'ajouter ici.")
 else:
