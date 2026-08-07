@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique, intégration sombre du spinner et masquage des menus
+# Style CSS : Fond graphique, thématique sombre unifiée pour TOUS les boutons (link_button et button)
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -98,19 +98,27 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Bouton d'actualisation */
-    div[data-testid="stButton"] button {
-        background-color: rgba(30, 41, 59, 0.8) !important;
+    /* UNIFORMISATION SOMBRE DE TOUS LES BOUTONS ("Lire" et boutons standards) */
+    div[data-testid="stLinkButton"] a, div[data-testid="stButton"] button {
+        background-color: rgba(30, 41, 59, 0.85) !important;
         color: #f1f5f9 !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
-        transition: all 0.2s ease;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
     }
-    div[data-testid="stButton"] button:hover {
+    div[data-testid="stLinkButton"] a p, div[data-testid="stButton"] button p {
+        color: #f1f5f9 !important;
+    }
+    div[data-testid="stLinkButton"] a:hover, div[data-testid="stButton"] button:hover {
         border-color: #F472B6 !important;
         color: #F472B6 !important;
-        box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
+        background-color: rgba(30, 41, 59, 0.95) !important;
+        box-shadow: 0 0 15px rgba(244, 114, 182, 0.3) !important;
+    }
+    div[data-testid="stLinkButton"] a:hover p, div[data-testid="stButton"] button:hover p {
+        color: #F472B6 !important;
     }
 
     /* Style des cartes d'articles */
