@@ -273,20 +273,23 @@ SOURCES = [
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
+# Liste des sous-rubriques hors-sujet à filtrer obligatoirement
+EXCLUDED_CATEGORIES = [
+    "developpement-personnel", "sante", "bien-etre", "politique", 
+    "fait-divers", "societe", "lifestyle", "psycho", "sante-bien-etre"
+]
+
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
-    "Lightroom": ["lightroom", "raw", "developpement"],
+    "Lightroom": ["lightroom", "raw", "developpement photo"],
     "InDesign": ["indesign", "mise en page", "typographie", "edition"],
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
     "AI": ["ia", "ai", "intelligence artificielle", "midjourney", "firefly", "chatgpt"],
-    "Graphisme": ["design", "graphiste", "logo", "branding", "couleur", "typographie", "création"],
-    "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"],
-    "Tutoriels": ["tuto", "tutoriel", "guide", "astuce", "formation", "apprendre", "cours", "technique"],
+    "Graphisme": ["design graphique", "graphiste", "logo", "branding", "typographie", "charte graphique"],
+    "Photo": ["photo", "photographie", "appareil photo", "objectif photo", "capteur", "shooting", "portrait photo", "paysage photo"],
+    "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce photoshop", "formation design", "cours photo"],
     "Expos photos": [
-        "exposition", "expositions", "expo", "expos", "galerie", "galeries",
-        "musee", "musée", "vernissage", "evenement", "événement", "festival",
-        "artiste", "artistes", "photos", "photographies", "photographe", "photographes",
-        "retrospective", "rétrospective"
+        "exposition", "expositions", "expo photo", "galerie", "vernissage", "retrospective"
     ]
 }
 
@@ -425,6 +428,12 @@ def fetch_all_feeds():
         try:
             parsed = feedparser.parse(feed["url"])
             for entry in parsed.entries[:8]:
+                link = entry.get("link", "#")
+                
+                # Filtrer les articles issus de rubriques non créatives (ex: développement personnel, santé, etc.)
+                if any(bad_cat in link.lower() for bad_cat in EXCLUDED_CATEGORIES):
+                    continue
+
                 title = clean_text(entry.get("title", ""))
                 summary = clean_text(entry.get("summary", entry.get("description", "")))
                 dt = parse_entry_date(entry)
@@ -432,9 +441,9 @@ def fetch_all_feeds():
                 
                 cat = detect_article_category(title, summary)
                 articles.append({
-                    "id": hashlib.md5((entry.get("link", "#") + title).encode('utf-8')).hexdigest(),
+                    "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
                     "title": title,
-                    "link": entry.get("link", "#"),
+                    "link": link,
                     "source": feed["name"],
                     "summary": summary,
                     "date": dt,
