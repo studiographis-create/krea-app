@@ -143,26 +143,41 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Masquer le conteneur du marqueur invisible */
-    div[data-testid="stElementContainer"]:has(.tag-marker) {
+    /* Masquer complètement le div repère pour qu'il n'impacte pas la mise en page */
+    div[data-testid="stElementContainer"]:has(#trend-tags-marker) {
         display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    /* Adaptation des boutons de tendances : 3 par ligne sur smartphone, 6 sur 1 ligne sur ordinateur */
+    /* Force 3 colonnes par ligne sur Smartphone (<= 768px) pour le bloc Tendances */
     @media (max-width: 768px) {
-        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] {
-            display: grid !important;
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 6px !important;
+        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px 6px !important;
         }
-        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
-            width: 100% !important;
-            min-width: 0 !important;
+
+        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            width: calc(33.333% - 4px) !important;
+            min-width: calc(33.333% - 4px) !important;
+            max-width: calc(33.333% - 4px) !important;
+            flex: 1 1 calc(33.333% - 4px) !important;
+            margin: 0 !important;
             padding: 0 !important;
         }
-        div[data-testid="stElementContainer"]:has(.tag-marker) + div[data-testid="stHorizontalBlock"] button p {
-            font-size: 0.82rem !important;
+
+        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] button {
+            padding: 6px 2px !important;
+        }
+
+        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] button p {
+            font-size: 0.78rem !important;
             white-space: nowrap !important;
+            text-overflow: ellipsis !important;
+            overflow: hidden !important;
         }
     }
 
@@ -460,8 +475,8 @@ with col_refresh:
 # Mots-clés Tendances (Trending Tags)
 st.write("🔥 **Tendances du moment :**")
 
-# Placer le marqueur au-dessus de la grille des colonnes
-st.markdown('<span class="tag-marker"></span>', unsafe_allow_html=True)
+# Placer l'élément repère invisible AVANT la création des colonnes
+st.markdown('<div id="trend-tags-marker"></div>', unsafe_allow_html=True)
 
 tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
