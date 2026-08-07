@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS (liste complète enrichie)
+# Sources RSS (liste complète avec OuiOui Photo)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -218,6 +218,7 @@ SOURCES = [
     {"name": "L'Œil de la Photographie", "url": "https://loeildelaphotographie.com/fr/feed/"},
     {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
+    {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
 KEYWORDS = {
@@ -227,7 +228,9 @@ KEYWORDS = {
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
     "AI": ["ia", "ai", "intelligence artificielle", "midjourney", "firefly", "chatgpt"],
     "Graphisme": ["design", "graphiste", "logo", "branding", "couleur", "typographie", "création"],
-    "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"]
+    "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"],
+    "Tutoriels": ["tuto", "tutoriel", "guide", "astuce", "formation", "apprendre", "cours", "technique"],
+    "Expositions": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste"]
 }
 
 def clean_text(raw_html):
@@ -358,8 +361,8 @@ def get_image_src(img_obj):
 # Charger tous les articles
 all_fetched = fetch_all_feeds()
 
-# Filtres de catégories + Onglet Favoris
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "⭐ Favoris"]
+# Filtres de catégories (avec Tutoriels et Expositions) + Onglet Favoris
+categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expositions", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 # Barre d'outils : Source, Recherche, Bouton Actualiser
