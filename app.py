@@ -43,28 +43,33 @@ st.markdown("""
         color: #f1f5f9;
     }
     
-    /* Dynamic Loading Indicator / Status Widget (Fond sombre forcé) */
+    /* Dynamic Loading Indicator / Status Widget / Spinner (Fond sombre absolu forcé sur PC et mobile) */
     div[data-testid="stStatusWidget"], 
     div[data-testid="stSpinner"], 
     div[data-testid="stNotification"],
     div[data-testid="stToast"],
     div[data-baseweb="toast"],
-    div[data-testid="stStatusWidget"] > div,
-    div[data-testid="stStatusWidget"] * {
-        background-color: rgba(15, 23, 42, 0.95) !important;
+    div[data-baseweb="spinner"],
+    .stSpinner,
+    div[data-testid="stStatusWidget"] > div {
+        background-color: #0f172a !important;
+        background: #0f172a !important;
         backdrop-filter: blur(12px) !important;
         color: #f8fafc !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
     }
     
-    div[data-testid="stStatusWidget"] p, 
-    div[data-testid="stStatusWidget"] span,
-    div[data-testid="stSpinner"] p,
+    div[data-testid="stStatusWidget"] *, 
+    div[data-testid="stSpinner"] *,
+    .stSpinner *,
+    div[data-testid="stSpinner"] p, 
     div[data-testid="stSpinner"] span {
         color: #ffffff !important;
+        fill: #ffffff !important;
         font-weight: 600 !important;
+        background-color: transparent !important;
     }
 
     /* Labels de tous les champs en blanc lisible */
@@ -333,7 +338,6 @@ SOURCES = [
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
-# (Le reste du code reste inchangé ci-dessous)
 EXCLUDED_CATEGORIES = [
     "developpement-personnel", "sante", "bien-etre", "politique", 
     "fait-divers", "societe", "lifestyle", "psycho", "sante-bien-etre"
