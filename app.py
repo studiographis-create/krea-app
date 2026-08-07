@@ -171,23 +171,25 @@ st.markdown("""
             display: none !important;
         }
 
-        /* Aligner le bloc du Logo et le bouton d'installation sur la même ligne horizontale sur mobile */
-        div[data-testid="stHorizontalBlock"]:has(svg) {
+        /* Aligner et coller le bouton d'installation à droite du logo sur mobile */
+        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 8px !important;
+            justify-content: space-between !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(1) {
-            flex: 3 !important;
-            width: auto !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) {
+        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(1) {
             flex: 1 !important;
             width: auto !important;
+        }
+        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) {
+            display: flex !important;
+            justify-content: flex-end !important;
+            width: auto !important;
+            flex: 0 0 auto !important;
             margin-top: 0 !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) button {
+        div.stApp div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) button {
             font-size: 0.68rem !important;
             padding: 4px 6px !important;
             white-space: nowrap !important;
@@ -299,7 +301,7 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea + Bouton Installation côte à côte sur mobile et PC
+# Logo SVG Krea + Bouton Installation
 col_logo, col_inst = st.columns([3.5, 1])
 with col_logo:
     st.markdown("""
