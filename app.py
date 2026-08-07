@@ -215,6 +215,9 @@ SOURCES = [
     {"name": "ActuIA", "url": "https://www.actuia.com/feed/"},
     {"name": "L'Usine Digitale", "url": "https://www.usine-digitale.fr/rss"},
     {"name": "RTBF - IA", "url": "https://www.rtbf.be/rss/tag_intelligence-artificielle.xml"},
+    {"name": "L'Œil de la Photographie", "url": "https://loeildelaphotographie.com/fr/feed/"},
+    {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
+    {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
 ]
 
 KEYWORDS = {
