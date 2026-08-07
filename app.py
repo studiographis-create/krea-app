@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique, thématique sombre unifiée pour TOUS les boutons (link_button et button)
+# Style CSS : Champs harmonisés, fond graphique et thématique sombre pour les cartes
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -49,12 +49,6 @@ st.markdown("""
         color: #cbd5e1 !important;
         background-color: transparent !important;
     }
-    div[data-testid="stStatusWidget"] code {
-        background-color: rgba(139, 92, 246, 0.25) !important;
-        color: #F472B6 !important;
-        border: 1px solid rgba(244, 114, 182, 0.3) !important;
-        border-radius: 6px !important;
-    }
 
     /* Bloc de sélection des catégories avec fond glassmorphism */
     div[data-testid="stRadio"] {
@@ -85,20 +79,33 @@ st.markdown("""
         background-color: #F472B6 !important;
     }
 
-    /* Champs de recherche et de sélection */
-    div[data-testid="stTextInput"] input, div[data-baseweb="select"] > div {
-        background-color: rgba(30, 41, 59, 0.8) !important;
-        backdrop-filter: blur(8px) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
+    div[data-testid="stTextInput"] input {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
         border-radius: 10px !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stTextInput"] input::placeholder {
+        color: #64748b !important;
+        opacity: 1 !important;
+    }
+    div[data-baseweb="select"] > div {
+        background-color: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+    }
+    div[data-baseweb="select"] * {
+        color: #0f172a !important;
     }
     div[data-testid="stTextInput"] label p, div[data-testid="stSelectbox"] label p {
         color: #cbd5e1 !important;
         font-weight: 600 !important;
     }
 
-    /* UNIFORMISATION SOMBRE DE TOUS LES BOUTONS ("Lire" et boutons standards) */
+    /* UNIFORMISATION SOMBRE DE TOUS LES BOUTONS ("Lire", "Favori", "Actualiser") */
     div[data-testid="stLinkButton"] a, div[data-testid="stButton"] button {
         background-color: rgba(30, 41, 59, 0.85) !important;
         color: #f1f5f9 !important;
