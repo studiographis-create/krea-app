@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS (liste complète avec OuiOui Photo)
+# Sources RSS (liste complète enrichie)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -219,6 +219,8 @@ SOURCES = [
     {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
+    {"name": "Out.be (Expos Photo)", "url": "https://www.out.be/fr/c/expos/photographies/feed/"},
+    {"name": "Quefaire.be (Expos Photo)", "url": "https://www.quefaire.be/expositions/52/photos/feed/"},
 ]
 
 KEYWORDS = {
@@ -230,7 +232,7 @@ KEYWORDS = {
     "Graphisme": ["design", "graphiste", "logo", "branding", "couleur", "typographie", "création"],
     "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"],
     "Tutoriels": ["tuto", "tutoriel", "guide", "astuce", "formation", "apprendre", "cours", "technique"],
-    "Expositions": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste"]
+    "Expositions": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste", "photos"]
 }
 
 def clean_text(raw_html):
