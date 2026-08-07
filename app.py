@@ -74,9 +74,11 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
     
-    /* Arrondir les images insérées dans les cartes */
+    /* Arrondir et ajuster les images insérées dans les cartes */
     div[data-testid="stImage"] img {
         border-radius: 10px !important;
+        max-height: 180px !important;
+        object-fit: cover !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -119,6 +121,18 @@ SOURCES = [
     {"name": "Korben", "url": "https://korben.info/feed"},
 ]
 
+# Images thématiques par défaut si le flux ne fournit pas d'image valide
+DEFAULT_IMAGES = {
+    "Photoshop": "https://images.unsplash.com/photo-1542744094-3a3172720177?w=600&auto=format&fit=crop&q=80",
+    "Lightroom": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80",
+    "InDesign": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
+    "Illustrator": "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&auto=format&fit=crop&q=80",
+    "AI": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80",
+    "Graphisme": "https://images.unsplash.com/photo-1600132806370-bf17e65e942f?w=600&auto=format&fit=crop&q=80",
+    "Photo": "https://images.unsplash.com/photo-1512790182412-b19e6d61b397?w=600&auto=format&fit=crop&q=80",
+    "Tous": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&auto=format&fit=crop&q=80"
+}
+
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement"],
@@ -133,25 +147,42 @@ def clean_text(raw_html):
     """Supprime les balises HTML du texte de description"""
     return re.sub(r'<.*?>', '', raw_html)
 
+def clean_url(url):
+    """Vérifie que l'URL d'image est valide et sécurisée"""
+    if not url:
+        return None
+    url = url.strip()
+    if url.startswith("http://") or url.startswith("https://"):
+        # Ignorer les gravatars, minuscules icônes et scripts de tracking
+        if any(bad in url.lower() for bad in ["gravatar", "1x1", "pixel", "icon", "logo", "emoji", ".svg"]):
+            return None
+        return url
+    return None
+
 def extract_image_url(entry):
-    """Extrait l'URL de l'image depuis les métadonnées RSS ou le HTML du résumé"""
-    # 1. Cherche dans media_content
+    """Extrait l'URL de l'image depuis les métadonnées RSS"""
     if 'media_content' in entry and len(entry.media_content) > 0:
-        return entry.media_content[0].get('url')
-    # 2. Cherche dans media_thumbnail
+        for item in entry.media_content:
+            url = clean_url(item.get('url'))
+            if url: return url
+            
     if 'media_thumbnail' in entry and len(entry.media_thumbnail) > 0:
-        return entry.media_thumbnail[0].get('url')
-    # 3. Cherche dans les fichiers joints (enclosures)
+        for item in entry.media_thumbnail:
+            url = clean_url(item.get('url'))
+            if url: return url
+
     if 'enclosures' in entry and len(entry.enclosures) > 0:
         for enc in entry.enclosures:
             if enc.get('type', '').startswith('image/'):
-                return enc.get('href')
-    # 4. Recherche d'une balise <img> dans le résumé HTML
+                url = clean_url(enc.get('href'))
+                if url: return url
+
     summary_raw = entry.get('summary', '') or entry.get('description', '')
     img_match = re.search(r'<img [^>]*src=["\']([^"\']+)["\']', summary_raw)
     if img_match:
-        return img_match.group(1)
-        
+        url = clean_url(img_match.group(1))
+        if url: return url
+
     return None
 
 # Filtres de catégories
@@ -172,7 +203,11 @@ with st.spinner("Chargement des articles de Krea..."):
             title = entry.get("title", "")
             summary = clean_text(entry.get("summary", entry.get("description", "")))
             text_to_check = f"{title} {summary}".lower()
-            image_url = extract_image_url(entry)
+            
+            # Récupération de l'image du site ou image de secours thématique
+            extracted_img = extract_image_url(entry)
+            fallback_img = DEFAULT_IMAGES.get(selected_category, DEFAULT_IMAGES["Tous"])
+            final_img = extracted_img if extracted_img else fallback_img
             
             if selected_category == "Tous":
                 cat_match = True
@@ -190,8 +225,8 @@ with st.spinner("Chargement des articles de Krea..."):
                     "title": title,
                     "link": entry.get("link", "#"),
                     "source": feed["name"],
-                    "summary": summary[:180] + "..." if len(summary) > 180 else summary,
-                    "image": image_url
+                    "summary": summary[:160] + "..." if len(summary) > 160 else summary,
+                    "image": final_img
                 })
 
 if all_articles:
@@ -200,10 +235,7 @@ if all_articles:
         col = cols[idx % 3]
         with col:
             with st.container(border=True):
-                # Afficher l'image si elle est présente
-                if article["image"]:
-                    st.image(article["image"], use_container_width=True)
-                
+                st.image(article["image"], use_container_width=True)
                 st.caption(f"📍 {article['source']}")
                 st.markdown(f"**{article['title']}**")
                 st.write(article['summary'])
