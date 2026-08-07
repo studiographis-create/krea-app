@@ -6,6 +6,8 @@ import hashlib
 import base64
 from datetime import datetime, timezone
 import time
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 # Configuration de la page
 st.set_page_config(
@@ -195,7 +197,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS
+# Sources RSS + Scraping Web Direct pour Out.be et Quefaire.be
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -219,8 +221,8 @@ SOURCES = [
     {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
-    {"name": "Out.be (Expos Photo)", "url": "https://www.out.be/fr/c/expos/photographies/feed/"},
-    {"name": "Quefaire.be (Expos Photo)", "url": "https://www.quefaire.be/expositions/52/photos/feed/"},
+    {"name": "Out.be (Expos Photo)", "url": "https://www.out.be/fr/c/expos/photographies/", "type": "html"},
+    {"name": "Quefaire.be (Expos Photo)", "url": "https://www.quefaire.be/expositions/52/photos/", "type": "html"},
 ]
 
 KEYWORDS = {
@@ -232,7 +234,12 @@ KEYWORDS = {
     "Graphisme": ["design", "graphiste", "logo", "branding", "couleur", "typographie", "création"],
     "Photo": ["photo", "photographie", "appareil", "objectif", "capteur", "shooting", "portrait", "paysage"],
     "Tutoriels": ["tuto", "tutoriel", "guide", "astuce", "formation", "apprendre", "cours", "technique"],
-    "Expos photos": ["exposition", "expo", "galerie", "musee", "vernissage", "evenement", "festival", "artiste", "photos"]
+    "Expos photos": [
+        "exposition", "expositions", "expo", "expos", "galerie", "galeries",
+        "musee", "musée", "vernissage", "evenement", "événement", "festival",
+        "artiste", "artistes", "photos", "photographies", "photographe", "photographes",
+        "retrospective", "rétrospective"
+    ]
 }
 
 def clean_text(raw_html):
@@ -312,28 +319,150 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
+def scrape_out_be():
+    url = "https://www.out.be/fr/c/expos/photographies/"
+    articles = []
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+        resp = requests.get(url, headers=headers, timeout=6)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.content, "html.parser")
+            cards = soup.find_all(["article", "div", "li"], class_=re.compile(r"event|item|card|listing|fiche|item-event", re.I))
+            if not cards:
+                cards = soup.find_all("a", href=re.compile(r"/fr/"))
+            
+            seen_links = set()
+            for card in cards:
+                link_tag = card if card.name == "a" else card.find("a", href=True)
+                if not link_tag or not link_tag.get("href"):
+                    continue
+                href = link_tag["href"]
+                if not href.startswith("http"):
+                    href = "https://www.out.be" + href
+                if href in seen_links or "photographies" in href.split("/")[-1]:
+                    continue
+                
+                title_tag = card.find(["h2", "h3", "h4", "strong"]) or link_tag
+                title = clean_text(title_tag.text).strip()
+                if not title or len(title) < 4:
+                    continue
+                
+                img_tag = card.find("img")
+                img_url = None
+                if img_tag:
+                    img_url = img_tag.get("src") or img_tag.get("data-src") or img_tag.get("data-original")
+                    if img_url and not img_url.startswith("http"):
+                        img_url = "https://www.out.be" + img_url
+                        
+                p_tag = card.find(["p", "span", "div"])
+                summary = clean_text(p_tag.text).strip() if p_tag else f"Exposition photo sur Out.be : {title}"
+                if "exposition" not in summary.lower():
+                    summary += " — Exposition photo"
+                
+                seen_links.add(href)
+                articles.append({
+                    "id": hashlib.md5(href.encode('utf-8')).hexdigest(),
+                    "title": title,
+                    "link": href,
+                    "source": "Out.be (Expos Photo)",
+                    "summary": summary,
+                    "date": datetime.now(timezone.utc),
+                    "relative_date": "Récemment",
+                    "reading_time": estimate_reading_time(summary),
+                    "image_url": img_url
+                })
+                if len(articles) >= 10:
+                    break
+    except Exception:
+        pass
+    return articles
+
+def scrape_quefaire_be():
+    url = "https://www.quefaire.be/expositions/52/photos/"
+    articles = []
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+        resp = requests.get(url, headers=headers, timeout=6)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.content, "html.parser")
+            items = soup.find_all(["div", "li", "tr", "article"], class_=re.compile(r"item|event|fiche|annonce|ad", re.I))
+            if not items:
+                items = soup.find_all("a", href=re.compile(r"\.php|\d+"))
+            
+            seen_links = set()
+            for item in items:
+                link_tag = item if item.name == "a" else item.find("a", href=True)
+                if not link_tag or not link_tag.get("href"):
+                    continue
+                href = link_tag["href"]
+                if not href.startswith("http"):
+                    href = "https://www.quefaire.be/" + href.lstrip("/")
+                if href in seen_links or href.endswith("/photos/"):
+                    continue
+                
+                title_tag = item.find(["h2", "h3", "h4", "strong", "b"]) or link_tag
+                title = clean_text(title_tag.text).strip()
+                if not title or len(title) < 4:
+                    continue
+                
+                img_tag = item.find("img")
+                img_url = None
+                if img_tag:
+                    img_url = img_tag.get("src") or img_tag.get("data-src")
+                    if img_url and not img_url.startswith("http"):
+                        img_url = "https://www.quefaire.be/" + img_url.lstrip("/")
+                
+                p_tag = item.find(["p", "div", "span"])
+                summary = clean_text(p_tag.text).strip() if p_tag else f"Exposition photo sur Quefaire.be : {title}"
+                if "exposition" not in summary.lower():
+                    summary += " — Exposition photo"
+                
+                seen_links.add(href)
+                articles.append({
+                    "id": hashlib.md5(href.encode('utf-8')).hexdigest(),
+                    "title": title,
+                    "link": href,
+                    "source": "Quefaire.be (Expos Photo)",
+                    "summary": summary,
+                    "date": datetime.now(timezone.utc),
+                    "relative_date": "Récemment",
+                    "reading_time": estimate_reading_time(summary),
+                    "image_url": img_url
+                })
+                if len(articles) >= 10:
+                    break
+    except Exception:
+        pass
+    return articles
+
 @st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
 def fetch_all_feeds():
     articles = []
     for feed in SOURCES:
-        parsed = feedparser.parse(feed["url"])
-        for entry in parsed.entries[:8]:
-            title = entry.get("title", "")
-            summary = clean_text(entry.get("summary", entry.get("description", "")))
-            dt = parse_entry_date(entry)
-            extracted_url = extract_image_url(entry)
-            
-            articles.append({
-                "id": hashlib.md5((entry.get("link", "#") + title).encode('utf-8')).hexdigest(),
-                "title": title,
-                "link": entry.get("link", "#"),
-                "source": feed["name"],
-                "summary": summary,
-                "date": dt,
-                "relative_date": format_relative_date(dt),
-                "reading_time": estimate_reading_time(summary),
-                "image_url": extracted_url
-            })
+        if feed.get("type") == "html":
+            if "out.be" in feed["url"]:
+                articles.extend(scrape_out_be())
+            elif "quefaire.be" in feed["url"]:
+                articles.extend(scrape_quefaire_be())
+        else:
+            parsed = feedparser.parse(feed["url"])
+            for entry in parsed.entries[:8]:
+                title = entry.get("title", "")
+                summary = clean_text(entry.get("summary", entry.get("description", "")))
+                dt = parse_entry_date(entry)
+                extracted_url = extract_image_url(entry)
+                
+                articles.append({
+                    "id": hashlib.md5((entry.get("link", "#") + title).encode('utf-8')).hexdigest(),
+                    "title": title,
+                    "link": entry.get("link", "#"),
+                    "source": feed["name"],
+                    "summary": summary,
+                    "date": dt,
+                    "relative_date": format_relative_date(dt),
+                    "reading_time": estimate_reading_time(summary),
+                    "image_url": extracted_url
+                })
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
@@ -398,6 +527,13 @@ for art in all_fetched:
         cat_match = True
     elif selected_category == "Tous":
         cat_match = True
+    elif selected_category == "Expos photos":
+        # Inclusion directe de toutes les sources d'expositions + recherche de mots-clés
+        expos_sources = ["Out.be (Expos Photo)", "Quefaire.be (Expos Photo)", "L'Œil de la Photographie", "Blind Magazine"]
+        is_expos_source = any(src in art["source"] for src in expos_sources)
+        kw_list = KEYWORDS.get("Expos photos", [])
+        kw_match = any(kw in text_to_check for kw in kw_list)
+        cat_match = is_expos_source or kw_match
     else:
         kw_list = KEYWORDS.get(selected_category, [])
         cat_match = any(kw in text_to_check for kw in kw_list)
