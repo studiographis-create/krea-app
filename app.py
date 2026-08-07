@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique lumineux en haut (Mesh gradient), cartes, badges et masquage des menus Streamlit
+# Style CSS : Fond graphique, intégration sombre du spinner et masquage des menus
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -36,6 +36,26 @@ st.markdown("""
         color: #f1f5f9;
     }
     
+    /* Personnalisation de l'indicateur de chargement (Spinner / Running) */
+    div[data-testid="stStatusWidget"], [data-testid="stSpinner"], div[data-testid="stStatusWidget"] > div {
+        background-color: rgba(30, 41, 59, 0.85) !important;
+        backdrop-filter: blur(8px) !important;
+        color: #f1f5f9 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+    div[data-testid="stStatusWidget"] * {
+        color: #cbd5e1 !important;
+        background-color: transparent !important;
+    }
+    div[data-testid="stStatusWidget"] code {
+        background-color: rgba(139, 92, 246, 0.25) !important;
+        color: #F472B6 !important;
+        border: 1px solid rgba(244, 114, 182, 0.3) !important;
+        border-radius: 6px !important;
+    }
+
     /* Bloc de sélection des catégories avec fond glassmorphism */
     div[data-testid="stRadio"] {
         background-color: rgba(30, 41, 59, 0.75) !important;
@@ -251,7 +271,7 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
-@st.cache_data(ttl=1800)
+@st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
 def fetch_all_feeds():
     articles = []
     for feed in SOURCES:
@@ -276,7 +296,7 @@ def fetch_all_feeds():
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def fetch_image_data(url):
     if not url or "picsum.photos" in url or "unsplash.com" in url:
         return url
