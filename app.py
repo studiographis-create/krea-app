@@ -6,8 +6,6 @@ import hashlib
 import base64
 from datetime import datetime, timezone
 import time
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 
 # Configuration de la page
 st.set_page_config(
@@ -197,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS + Scraping Web Direct pour Out.be et Quefaire.be
+# Sources RSS + Web (sans bs4)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -326,44 +324,26 @@ def scrape_out_be():
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
         resp = requests.get(url, headers=headers, timeout=6)
         if resp.status_code == 200:
-            soup = BeautifulSoup(resp.content, "html.parser")
-            cards = soup.find_all(["article", "div", "li"], class_=re.compile(r"event|item|card|listing|fiche|item-event", re.I))
-            if not cards:
-                cards = soup.find_all("a", href=re.compile(r"/fr/"))
-            
+            html = resp.text
+            links = re.findall(r'<a[^>]+href=["\'](/fr/[^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
             seen_links = set()
-            for card in cards:
-                link_tag = card if card.name == "a" else card.find("a", href=True)
-                if not link_tag or not link_tag.get("href"):
-                    continue
-                href = link_tag["href"]
-                if not href.startswith("http"):
-                    href = "https://www.out.be" + href
-                if href in seen_links or "photographies" in href.split("/")[-1]:
+            for href, inner in links:
+                full_href = "https://www.out.be" + href
+                title = clean_text(inner).strip()
+                if not title or len(title) < 5 or full_href in seen_links or "photographies" in href.split("/")[-1]:
                     continue
                 
-                title_tag = card.find(["h2", "h3", "h4", "strong"]) or link_tag
-                title = clean_text(title_tag.text).strip()
-                if not title or len(title) < 4:
-                    continue
-                
-                img_tag = card.find("img")
-                img_url = None
-                if img_tag:
-                    img_url = img_tag.get("src") or img_tag.get("data-src") or img_tag.get("data-original")
-                    if img_url and not img_url.startswith("http"):
-                        img_url = "https://www.out.be" + img_url
-                        
-                p_tag = card.find(["p", "span", "div"])
-                summary = clean_text(p_tag.text).strip() if p_tag else f"Exposition photo sur Out.be : {title}"
-                if "exposition" not in summary.lower():
-                    summary += " — Exposition photo"
-                
-                seen_links.add(href)
+                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
+                img_url = img_match.group(1) if img_match else None
+                if img_url and not img_url.startswith("http"):
+                    img_url = "https://www.out.be" + img_url
+                    
+                summary = f"Exposition photo sur Out.be : {title}"
+                seen_links.add(full_href)
                 articles.append({
-                    "id": hashlib.md5(href.encode('utf-8')).hexdigest(),
+                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
                     "title": title,
-                    "link": href,
+                    "link": full_href,
                     "source": "Out.be (Expos Photo)",
                     "summary": summary,
                     "date": datetime.now(timezone.utc),
@@ -384,44 +364,28 @@ def scrape_quefaire_be():
         headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
         resp = requests.get(url, headers=headers, timeout=6)
         if resp.status_code == 200:
-            soup = BeautifulSoup(resp.content, "html.parser")
-            items = soup.find_all(["div", "li", "tr", "article"], class_=re.compile(r"item|event|fiche|annonce|ad", re.I))
-            if not items:
-                items = soup.find_all("a", href=re.compile(r"\.php|\d+"))
-            
+            html = resp.text
+            links = re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
             seen_links = set()
-            for item in items:
-                link_tag = item if item.name == "a" else item.find("a", href=True)
-                if not link_tag or not link_tag.get("href"):
+            for href, inner in links:
+                if not ("quefaire.be" in href or href.startswith("/") or href.endswith(".php") or href.split("/")[-1].isdigit()):
                     continue
-                href = link_tag["href"]
-                if not href.startswith("http"):
-                    href = "https://www.quefaire.be/" + href.lstrip("/")
-                if href in seen_links or href.endswith("/photos/"):
+                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
+                title = clean_text(inner).strip()
+                if not title or len(title) < 5 or full_href in seen_links or full_href.endswith("/photos/"):
                     continue
                 
-                title_tag = item.find(["h2", "h3", "h4", "strong", "b"]) or link_tag
-                title = clean_text(title_tag.text).strip()
-                if not title or len(title) < 4:
-                    continue
-                
-                img_tag = item.find("img")
-                img_url = None
-                if img_tag:
-                    img_url = img_tag.get("src") or img_tag.get("data-src")
-                    if img_url and not img_url.startswith("http"):
-                        img_url = "https://www.quefaire.be/" + img_url.lstrip("/")
-                
-                p_tag = item.find(["p", "div", "span"])
-                summary = clean_text(p_tag.text).strip() if p_tag else f"Exposition photo sur Quefaire.be : {title}"
-                if "exposition" not in summary.lower():
-                    summary += " — Exposition photo"
-                
-                seen_links.add(href)
+                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
+                img_url = img_match.group(1) if img_match else None
+                if img_url and not img_url.startswith("http"):
+                    img_url = "https://www.quefaire.be/" + img_url.lstrip("/")
+                    
+                summary = f"Exposition photo sur Quefaire.be : {title}"
+                seen_links.add(full_href)
                 articles.append({
-                    "id": hashlib.md5(href.encode('utf-8')).hexdigest(),
+                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
                     "title": title,
-                    "link": href,
+                    "link": full_href,
                     "source": "Quefaire.be (Expos Photo)",
                     "summary": summary,
                     "date": datetime.now(timezone.utc),
@@ -492,7 +456,7 @@ def get_image_src(img_obj):
 # Charger tous les articles
 all_fetched = fetch_all_feeds()
 
-# Filtres de catégories (avec "Expos photos") + Onglet Favoris
+# Filtres de catégories + Onglet Favoris
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
@@ -528,7 +492,6 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     elif selected_category == "Expos photos":
-        # Inclusion directe de toutes les sources d'expositions + recherche de mots-clés
         expos_sources = ["Out.be (Expos Photo)", "Quefaire.be (Expos Photo)", "L'Œil de la Photographie", "Blind Magazine"]
         is_expos_source = any(src in art["source"] for src in expos_sources)
         kw_list = KEYWORDS.get("Expos photos", [])
