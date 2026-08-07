@@ -143,38 +143,31 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Masquer complètement le div repère pour qu'il n'impacte pas la mise en page */
-    div[data-testid="stElementContainer"]:has(#trend-tags-marker) {
-        display: none !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Force 3 colonnes par ligne sur Smartphone (<= 768px) pour le bloc Tendances */
+    /* FORCER 3 COLONNES SUR MOBILE POUR LES TENDANCES DU MOMENT */
     @media (max-width: 768px) {
-        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] {
+        div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 8px 6px !important;
+            gap: 6px 4px !important;
         }
 
-        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+        div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) > div[data-testid="stColumn"] {
             width: calc(33.333% - 4px) !important;
             min-width: calc(33.333% - 4px) !important;
             max-width: calc(33.333% - 4px) !important;
-            flex: 1 1 calc(33.333% - 4px) !important;
+            flex: 1 0 calc(33.333% - 4px) !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
-        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] button {
+        div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) button {
             padding: 6px 2px !important;
+            width: 100% !important;
         }
 
-        div[data-testid="stElementContainer"]:has(#trend-tags-marker) + div[data-testid="stHorizontalBlock"] button p {
-            font-size: 0.78rem !important;
+        div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) button p {
+            font-size: 0.76rem !important;
             white-space: nowrap !important;
             text-overflow: ellipsis !important;
             overflow: hidden !important;
@@ -475,14 +468,11 @@ with col_refresh:
 # Mots-clés Tendances (Trending Tags)
 st.write("🔥 **Tendances du moment :**")
 
-# Placer l'élément repère invisible AVANT la création des colonnes
-st.markdown('<div id="trend-tags-marker"></div>', unsafe_allow_html=True)
-
 tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 for idx, tag in enumerate(tags):
     with tag_cols[idx]:
-        if st.button(f"#{tag}", use_container_width=True):
+        if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
             st.session_state.search_input = tag
             st.rerun()
 
