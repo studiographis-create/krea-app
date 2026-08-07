@@ -3,6 +3,7 @@ import feedparser
 import re
 import requests
 import hashlib
+import base64
 
 # Configuration de la page
 st.set_page_config(
@@ -11,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Largeur de photo identique à la largeur du bloc de texte
+# Style CSS : Thème sombre, cartes et masquage des menus
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -75,25 +76,6 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {
         border-color: #8b5cf6 !important;
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
-    }
-    
-    /* FORCE LA LARGEUR DE L'IMAGE À CORRESPONDRE EXACTEMENT À CELLE DU TEXTE */
-    div[data-testid="stImage"] {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    div[data-testid="stImage"] > div {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    div[data-testid="stImage"] img {
-        width: 100% !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        height: 180px !important;
-        object-fit: cover !important;
-        border-radius: 10px !important;
-        display: block !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -211,6 +193,13 @@ def get_unique_fallback(title):
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
     return f"https://picsum.photos/seed/{seed}/600/350"
 
+def get_image_src(img_obj):
+    """Convertit les données brutes d'image en URL Data-URI pour affichage HTML direct"""
+    if isinstance(img_obj, bytes):
+        b64 = base64.b64encode(img_obj).decode('utf-8')
+        return f"data:image/jpeg;base64,{b64}"
+    return img_obj
+
 # Filtres de catégories
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
@@ -260,7 +249,12 @@ if all_articles:
         col = cols[idx % 3]
         with col:
             with st.container(border=True):
-                st.image(article["image"], use_container_width=True)
+                # Affichage HTML direct pour garantir 100% de la largeur du texte
+                img_src = get_image_src(article["image"])
+                st.markdown(
+                    f'<img src="{img_src}" style="width:100%; height:190px; object-fit:cover; border-radius:10px; margin-bottom:12px; display:block;">', 
+                    unsafe_allow_html=True
+                )
                 st.caption(f"📍 {article['source']}")
                 st.markdown(f"**{article['title']}**")
                 st.write(article['summary'])
