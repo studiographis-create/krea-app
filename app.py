@@ -3,7 +3,6 @@ import feedparser
 import re
 import requests
 import hashlib
-import base64
 from datetime import datetime, timezone
 import time
 
@@ -195,7 +194,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS + Web Scraping
+# Sources RSS 100% fiables et structurées
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -219,8 +218,6 @@ SOURCES = [
     {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
-    {"name": "Out.be (Expos Photo)", "url": "https://www.out.be/fr/c/expos/photographies/", "type": "html"},
-    {"name": "Quefaire.be (Expos Photo)", "url": "https://www.quefaire.be/expositions/52/photos/", "type": "html"},
 ]
 
 KEYWORDS = {
@@ -239,18 +236,6 @@ KEYWORDS = {
         "retrospective", "rétrospective"
     ]
 }
-
-NAV_BLACKLIST = [
-    'ce week-end', 'semaine prochaine', 'cette semaine', 'demain', "aujourd'hui", 
-    'lieux à découvrir', 'citytrips', 'thématiques', 'luxembourg', 'liège', 'liege', 
-    'namur', 'hainaut', 'brabant wallon', 'brabant', 'bruxelles', 'flandre', 'wallonie', 
-    'anvers', 'limbourg', 'charleroi', 'mons', 'tournai', 'verviers', 'arlon', 
-    'toutes les villes', 'toutes les provinces', 'expositions', 'photos', 'accueil', 
-    'agenda', 'voir plus', 'lire', 'en savoir plus', 'partager', 'suite'
-]
-
-# Image élégante et sombre de galerie photo en cas d'affiche indisponible
-EXPO_FALLBACK = "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80"
 
 def clean_text(raw_html):
     if not raw_html:
@@ -333,119 +318,18 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
-def scrape_out_be():
-    url = "https://www.out.be/fr/c/expos/photographies/"
-    articles = []
-    try:
-        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        resp = requests.get(url, headers=headers, timeout=7)
-        if resp.status_code == 200:
-            html = resp.text
-            # Seules les URLs d'événements officiels Out.be contiennent strictly /fr/e/
-            matches = re.findall(r'<a[^>]+href=["\'](/fr/e/[^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
-            seen_links = set()
-            
-            for href, inner in matches:
-                full_href = "https://www.out.be" + href
-                title = clean_text(inner)
-                title_lower = title.lower()
-                
-                if not title or len(title) < 5 or full_href in seen_links:
-                    continue
-                if any(bad in title_lower for bad in NAV_BLACKLIST):
-                    continue
-                
-                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
-                img_url = None
-                if img_match:
-                    src = img_match.group(1)
-                    if not any(bad in src.lower() for bad in ['logo', 'icon', 'pixel', 'banner']):
-                        img_url = src if src.startswith("http") else "https://www.out.be" + src
-                
-                summary = f"Exposition photo à découvrir sur Out.be : « {title} »."
-                seen_links.add(full_href)
-                articles.append({
-                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
-                    "title": title,
-                    "link": full_href,
-                    "source": "Out.be (Expos Photo)",
-                    "summary": summary,
-                    "date": datetime.now(timezone.utc),
-                    "relative_date": "Récemment",
-                    "reading_time": estimate_reading_time(summary),
-                    "image_url": img_url if img_url else EXPO_FALLBACK
-                })
-                if len(articles) >= 12:
-                    break
-    except Exception:
-        pass
-    return articles
-
-def scrape_quefaire_be():
-    url = "https://www.quefaire.be/expositions/52/photos/"
-    articles = []
-    try:
-        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        resp = requests.get(url, headers=headers, timeout=7)
-        if resp.status_code == 200:
-            html = resp.text
-            matches = re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
-            seen_links = set()
-            
-            for href, inner in matches:
-                title = clean_text(inner)
-                title_lower = title.lower()
-                
-                if not title or len(title) < 5:
-                    continue
-                if any(bad in title_lower for bad in NAV_BLACKLIST):
-                    continue
-                if not (".php" in href or re.search(r'\d{4,}', href)):
-                    continue
-                    
-                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
-                if full_href in seen_links or full_href.rstrip('/').endswith(('photos', 'expositions', 'quefaire.be')):
-                    continue
-                
-                img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
-                img_url = None
-                if img_match:
-                    src = img_match.group(1)
-                    if not any(bad in src.lower() for bad in ['logo', 'icon', 'pixel', 'banner']):
-                        img_url = src if src.startswith("http") else "https://www.quefaire.be/" + src.lstrip("/")
-                        
-                summary = f"Exposition photo en Belgique : « {title} ». Retrouvez le lieu et la programmation sur Quefaire.be."
-                seen_links.add(full_href)
-                articles.append({
-                    "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
-                    "title": title,
-                    "link": full_href,
-                    "source": "Quefaire.be (Expos Photo)",
-                    "summary": summary,
-                    "date": datetime.now(timezone.utc),
-                    "relative_date": "Récemment",
-                    "reading_time": estimate_reading_time(summary),
-                    "image_url": img_url if img_url else EXPO_FALLBACK
-                })
-                if len(articles) >= 12:
-                    break
-    except Exception:
-        pass
-    return articles
+def get_unique_fallback(title):
+    seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
+    return f"https://picsum.photos/seed/{seed}/600/350"
 
 @st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
 def fetch_all_feeds():
     articles = []
     for feed in SOURCES:
-        if feed.get("type") == "html":
-            if "out.be" in feed["url"]:
-                articles.extend(scrape_out_be())
-            elif "quefaire.be" in feed["url"]:
-                articles.extend(scrape_quefaire_be())
-        else:
+        try:
             parsed = feedparser.parse(feed["url"])
             for entry in parsed.entries[:8]:
-                title = entry.get("title", "")
+                title = clean_text(entry.get("title", ""))
                 summary = clean_text(entry.get("summary", entry.get("description", "")))
                 dt = parse_entry_date(entry)
                 extracted_url = extract_image_url(entry)
@@ -459,29 +343,13 @@ def fetch_all_feeds():
                     "date": dt,
                     "relative_date": format_relative_date(dt),
                     "reading_time": estimate_reading_time(summary),
-                    "image_url": extracted_url
+                    "image_url": extracted_url if extracted_url else get_unique_fallback(title)
                 })
+        except Exception:
+            pass
+            
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def fetch_image_data(url):
-    if not url or "unsplash.com" in url or "picsum.photos" in url:
-        return url
-    try:
-        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-        resp = requests.get(url, headers=headers, timeout=3)
-        if resp.status_code == 200 and "image" in resp.headers.get("Content-Type", ""):
-            return resp.content
-    except Exception:
-        pass
-    return None
-
-def get_image_src(img_obj):
-    if isinstance(img_obj, bytes):
-        b64 = base64.b64encode(img_obj).decode('utf-8')
-        return f"data:image/jpeg;base64,{b64}"
-    return img_obj or EXPO_FALLBACK
 
 # Charger tous les articles
 all_fetched = fetch_all_feeds()
@@ -522,7 +390,7 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     elif selected_category == "Expos photos":
-        expos_sources = ["Out.be (Expos Photo)", "Quefaire.be (Expos Photo)", "L'Œil de la Photographie", "Blind Magazine"]
+        expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe"]
         is_expos_source = any(src in art["source"] for src in expos_sources)
         kw_list = KEYWORDS.get("Expos photos", [])
         kw_match = any(kw in text_to_check for kw in kw_list)
@@ -544,12 +412,7 @@ for art in all_fetched:
         search_match = search_query.lower().strip() in text_to_check
         
     if cat_match and search_match and source_match:
-        extracted_url = art["image_url"]
-        img_data = fetch_image_data(extracted_url) if extracted_url else None
-        final_img = img_data if img_data is not None else EXPO_FALLBACK
-        
         art_copy = art.copy()
-        art_copy["image"] = final_img
         art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
         filtered_articles.append(art_copy)
 
@@ -567,9 +430,8 @@ if filtered_articles:
             st.markdown('<span class="hero-badge">🔥 À LA UNE</span>', unsafe_allow_html=True)
             col_hero_img, col_hero_text = st.columns([1.2, 1])
             with col_hero_img:
-                img_src = get_image_src(hero["image"])
                 st.markdown(
-                    f'<img src="{img_src}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', 
+                    f'<img src="{hero["image_url"]}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', 
                     unsafe_allow_html=True
                 )
             with col_hero_text:
@@ -600,9 +462,8 @@ if filtered_articles:
             col = cols[idx % 3]
             with col:
                 with st.container(border=True):
-                    img_src = get_image_src(article["image"])
                     st.markdown(
-                        f'<img src="{img_src}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:block;">', 
+                        f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:10px; display:block;">', 
                         unsafe_allow_html=True
                     )
                     st.caption(f"📍 **{article['source']}** • {article['relative_date']}")
