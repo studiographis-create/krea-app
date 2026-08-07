@@ -25,6 +25,12 @@ st.markdown("""
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
 
+    /* Réduction de la marge en haut de page */
+    .main .block-container, div[data-testid="stMainBlockContainer"] {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+    }
+
     /* Fond d'écran général avec mesh gradient */
     .stApp {
         background-color: #0b0f19;
@@ -143,8 +149,13 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* FORCER 3 COLONNES SUR MOBILE POUR LES TENDANCES DU MOMENT */
+    /* Masquer le bloc Affichage sur Smartphone */
     @media (max-width: 768px) {
+        div[data-testid="stColumn"]:has(#view-mode-marker) {
+            display: none !important;
+        }
+
+        /* FORCER 3 COLONNES SUR MOBILE POUR LES TENDANCES DU MOMENT */
         div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) {
             display: flex !important;
             flex-direction: row !important;
@@ -208,10 +219,10 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea (avec 'k' incliné et descendu)
+# Logo SVG Krea (Agrandis et espace réduit en haut)
 st.markdown("""
-<div style="margin-bottom: 20px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="340" style="max-width: 100%; height: auto;">
+<div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
       <defs>
         <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#8B5CF6" />
@@ -229,8 +240,8 @@ st.markdown("""
         <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
       </g>
       <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
-      <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="22" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
-      <text x="110" y="68" font-family="sans-serif" font-weight="500" font-size="13" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
+      <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
+      <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
     </svg>
 </div>
 """, unsafe_allow_html=True)
@@ -456,6 +467,7 @@ with col_search:
     search_query = st.text_input("🔍 Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
 
 with col_view:
+    st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
     view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
 
 with col_refresh:
