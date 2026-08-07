@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Images en pleine largeur (100% du conteneur) + masque menus
+# Style CSS : Largeur de photo identique à la largeur du bloc de texte
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -69,7 +69,7 @@ st.markdown("""
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
-        padding: 12px !important;
+        padding: 14px !important;
         transition: all 0.2s ease-in-out;
     }
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {
@@ -77,16 +77,22 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
     
-    /* IMAGES EN PLEINE LARGEUR DU CONTENEUR (100% alignées au texte) */
+    /* FORCE LA LARGEUR DE L'IMAGE À CORRESPONDRE EXACTEMENT À CELLE DU TEXTE */
     div[data-testid="stImage"] {
         width: 100% !important;
-        margin-bottom: 8px !important;
+        max-width: 100% !important;
+    }
+    div[data-testid="stImage"] > div {
+        width: 100% !important;
+        max-width: 100% !important;
     }
     div[data-testid="stImage"] img {
-        border-radius: 10px !important;
         width: 100% !important;
-        height: 200px !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: 180px !important;
         object-fit: cover !important;
+        border-radius: 10px !important;
         display: block !important;
     }
 </style>
