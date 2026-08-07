@@ -1,6 +1,7 @@
 import streamlit as st
 import feedparser
 import re
+import requests
 
 # Configuration de la page
 st.set_page_config(
@@ -9,8 +10,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Masquage des menus Streamlit, thème sombre, cartes et boutons
+# Style CSS & contournement du blocage d'images
 st.markdown("""
+<meta name="referrer" content="no-referrer">
 <style>
     /* Masquer le header (Stop, Fork, GitHub) et le footer (badge/couronne) */
     header {visibility: hidden;}
@@ -144,11 +146,9 @@ KEYWORDS = {
 }
 
 def clean_text(raw_html):
-    """Supprime les balises HTML du texte de description"""
     return re.sub(r'<.*?>', '', raw_html)
 
 def clean_url(url):
-    """Vérifie que l'URL d'image est valide et sécurisée"""
     if not url:
         return None
     url = url.strip()
@@ -159,7 +159,6 @@ def clean_url(url):
     return None
 
 def extract_image_url(entry):
-    """Extrait l'URL de l'image depuis les métadonnées RSS"""
     if 'media_content' in entry and len(entry.media_content) > 0:
         for item in entry.media_content:
             url = clean_url(item.get('url'))
@@ -184,6 +183,20 @@ def extract_image_url(entry):
 
     return None
 
+@st.cache_data(ttl=3600)
+def fetch_image_data(url):
+    """Télécharge l'image directement en Python pour contourner le blocage du navigateur"""
+    if not url or url.startswith("https://images.unsplash.com"):
+        return url
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
+        resp = requests.get(url, headers=headers, timeout=3)
+        if resp.status_code == 200 and "image" in resp.headers.get("Content-Type", ""):
+            return resp.content
+    except Exception:
+        pass
+    return None
+
 # Filtres de catégories
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
@@ -203,9 +216,11 @@ with st.spinner("Chargement des articles de Krea..."):
             summary = clean_text(entry.get("summary", entry.get("description", "")))
             text_to_check = f"{title} {summary}".lower()
             
-            extracted_img = extract_image_url(entry)
+            extracted_url = extract_image_url(entry)
+            img_data = fetch_image_data(extracted_url) if extracted_url else None
+            
             fallback_img = DEFAULT_IMAGES.get(selected_category, DEFAULT_IMAGES["Tous"])
-            final_img = extracted_img if extracted_img else fallback_img
+            final_img = img_data if img_data is not None else fallback_img
             
             if selected_category == "Tous":
                 cat_match = True
