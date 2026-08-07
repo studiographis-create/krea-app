@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS + Web (sans bs4)
+# Sources RSS + Web Scraping
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -238,6 +238,13 @@ KEYWORDS = {
         "artiste", "artistes", "photos", "photographies", "photographe", "photographes",
         "retrospective", "rétrospective"
     ]
+}
+
+BLACKLIST_REGIONS = {
+    'luxembourg', 'liège', 'liege', 'namur', 'hainaut', 'brabant wallon', 'brabant', 
+    'bruxelles', 'flandre', 'wallonie', 'anvers', 'limbourg', 'charleroi', 'mons', 
+    'tournai', 'verviers', 'arlon', 'toutes les villes', 'toutes les provinces', 
+    'expositions', 'photos', 'accueil', 'agenda', 'voir plus'
 }
 
 def clean_text(raw_html):
@@ -330,7 +337,9 @@ def scrape_out_be():
             for href, inner in links:
                 full_href = "https://www.out.be" + href
                 title = clean_text(inner).strip()
-                if not title or len(title) < 5 or full_href in seen_links or "photographies" in href.split("/")[-1]:
+                title_lower = title.lower()
+                
+                if not title or len(title) < 6 or title_lower in BLACKLIST_REGIONS or full_href in seen_links or href.rstrip('/').endswith('photographies'):
                     continue
                 
                 img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
@@ -338,7 +347,7 @@ def scrape_out_be():
                 if img_url and not img_url.startswith("http"):
                     img_url = "https://www.out.be" + img_url
                     
-                summary = f"Exposition photo sur Out.be : {title}"
+                summary = f"Exposition photographique à découvrir sur Out.be : {title}"
                 seen_links.add(full_href)
                 articles.append({
                     "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
@@ -365,14 +374,24 @@ def scrape_quefaire_be():
         resp = requests.get(url, headers=headers, timeout=6)
         if resp.status_code == 200:
             html = resp.text
-            links = re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
+            items = re.findall(r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.DOTALL)
             seen_links = set()
-            for href, inner in links:
-                if not ("quefaire.be" in href or href.startswith("/") or href.endswith(".php") or href.split("/")[-1].isdigit()):
-                    continue
-                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
+            for href, inner in items:
                 title = clean_text(inner).strip()
-                if not title or len(title) < 5 or full_href in seen_links or full_href.endswith("/photos/"):
+                title_lower = title.lower()
+                
+                # Éliminer les filtres de villes/régions
+                if not title or len(title) < 6 or title_lower in BLACKLIST_REGIONS:
+                    continue
+                
+                # Exiger une URL d'événement valide (contenant un ID ou .php)
+                if not ("_" in href or ".php" in href or re.search(r'\d{4,}', href)):
+                    continue
+                if href.rstrip('/').endswith(('photos', 'liege', 'namur', 'luxembourg', 'hainaut', 'bruxelles', 'brabant')):
+                    continue
+                    
+                full_href = href if href.startswith("http") else "https://www.quefaire.be/" + href.lstrip("/")
+                if full_href in seen_links:
                     continue
                 
                 img_match = re.search(r'src=["\']([^"\']+)["\']', inner)
@@ -380,7 +399,7 @@ def scrape_quefaire_be():
                 if img_url and not img_url.startswith("http"):
                     img_url = "https://www.quefaire.be/" + img_url.lstrip("/")
                     
-                summary = f"Exposition photo sur Quefaire.be : {title}"
+                summary = f"Exposition photo en Belgique à découvrir : {title}"
                 seen_links.add(full_href)
                 articles.append({
                     "id": hashlib.md5(full_href.encode('utf-8')).hexdigest(),
