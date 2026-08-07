@@ -43,18 +43,28 @@ st.markdown("""
         color: #f1f5f9;
     }
     
-    /* Indicator Loading / Status Widget */
-    div[data-testid="stStatusWidget"], [data-testid="stSpinner"], div[data-testid="stStatusWidget"] > div {
-        background-color: rgba(30, 41, 59, 0.85) !important;
-        backdrop-filter: blur(8px) !important;
-        color: #f1f5f9 !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 10px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-    }
+    /* Dynamic Loading Indicator / Status Widget (Fond sombre forcé) */
+    div[data-testid="stStatusWidget"], 
+    div[data-testid="stSpinner"], 
+    div[data-testid="stNotification"],
+    div[data-testid="stToast"],
+    div[data-baseweb="toast"],
+    div[data-testid="stStatusWidget"] > div,
     div[data-testid="stStatusWidget"] * {
-        color: #cbd5e1 !important;
-        background-color: transparent !important;
+        background-color: rgba(15, 23, 42, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        color: #f8fafc !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    div[data-testid="stStatusWidget"] p, 
+    div[data-testid="stStatusWidget"] span,
+    div[data-testid="stSpinner"] p,
+    div[data-testid="stSpinner"] span {
+        color: #ffffff !important;
+        font-weight: 600 !important;
     }
 
     /* Labels de tous les champs en blanc lisible */
