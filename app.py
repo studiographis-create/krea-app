@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Champs harmonisés, fond graphique et thématique sombre pour les cartes
+# Style CSS : Fond graphique, thématique sombre et pastille rose unifiée
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -71,12 +71,19 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* Pastille rose (#F472B6) */
+    /* Pastille sélectionnée rose identique au badge (#F472B6) */
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         border-color: #F472B6 !important;
     }
-    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] div {
+    div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] * {
         background-color: #F472B6 !important;
+        border-color: #F472B6 !important;
+        fill: #F472B6 !important;
+        color: #F472B6 !important;
+    }
+    div[data-testid="stRadio"] input[type="radio"]:checked + div {
+        background-color: #F472B6 !important;
+        border-color: #F472B6 !important;
     }
 
     /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
