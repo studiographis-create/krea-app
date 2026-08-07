@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Correction radicale du cercle radio rouge de Streamlit
+# Style CSS : Thème sombre, champs harmonisés et boutons uniformes
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -23,6 +23,11 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
+
+    /* Définition de la couleur principale en rose (#F472B6) pour tout Streamlit */
+    :root {
+        --primary-color: #F472B6 !important;
+    }
 
     /* Fond d'écran général avec effet mesh gradient créatif en haut de page */
     .stApp {
@@ -50,8 +55,8 @@ st.markdown("""
         background-color: transparent !important;
     }
 
-    /* Bloc de sélection des catégories avec fond glassmorphism */
-    div[data-testid="stRadio"] {
+    /* Bloc de sélection des catégories (Pills container) */
+    div[data-testid="stPills"] {
         background-color: rgba(30, 41, 59, 0.75) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
@@ -60,33 +65,10 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
     }
-    div[data-testid="stRadio"] label {
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
-    }
-    div[data-testid="stRadio"] p {
+    div[data-testid="stPills"] label p {
         color: #cbd5e1 !important;
         font-size: 0.95rem !important;
         font-weight: 700 !important;
-    }
-
-    /* FORÇAGE RADICAL DE LA COULEUR DU BOUTON RADIO ACTIF (Élimine le rouge natif) */
-    div[data-testid="stRadio"] div[data-baseweb="radio"] div:first-child {
-        background-color: transparent !important;
-        border-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] input:checked + div {
-        background-color: #F472B6 !important;
-        border-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] div[role="radiogroup"] label div[aria-checked="true"] {
-        background-color: #F472B6 !important;
-        border-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] [data-baseweb="radio"] [aria-checked="true"] {
-        background-color: #F472B6 !important;
-        border-color: #F472B6 !important;
     }
 
     /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
@@ -347,9 +329,11 @@ def get_image_src(img_obj):
 # Charger tous les articles
 all_fetched = fetch_all_feeds()
 
-# Filtres de catégories + Onglet Favoris
+# Remplacement de st.radio par st.pills (fini les ronds rouges !)
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "⭐ Favoris"]
-selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
+selected_category = st.pills("Filtrer par catégorie :", categories, default="Tous")
+if not selected_category:
+    selected_category = "Tous"
 
 # Barre d'outils : Source, Recherche, Bouton Actualiser
 col_source, col_search, col_refresh = st.columns([1.5, 2.5, 1])
