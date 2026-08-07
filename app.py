@@ -159,7 +159,7 @@ st.markdown("""
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
-    /* Masquer le bloc Affichage sur Smartphone */
+    /* Masquer le bloc Affichage sur Smartphone et garder les boutons sur une seule ligne */
     @media (max-width: 768px) {
         div[data-testid="stColumn"]:has(#view-mode-marker) {
             display: none !important;
@@ -192,6 +192,22 @@ st.markdown("""
             white-space: nowrap !important;
             text-overflow: ellipsis !important;
             overflow: hidden !important;
+        }
+
+        /* ALIGNER LES 3 BOUTONS D'ACTION DES ARTICLES SUR UNE SEULE LIGNE SUR MOBILE */
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 6px !important;
+        }
+
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            width: auto !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
     }
 
