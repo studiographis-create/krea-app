@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Correction radicale du cercle radio rouge de Streamlit
+# Style CSS : Fond graphique, thématique sombre et forçage du rose (#F472B6)
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -71,7 +71,7 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* FORÇAGE RADICAL DE LA COULEUR DU BOUTON RADIO ACTIF (Élimine le rouge natif) */
+    /* FORÇAGE DE LA COULEUR DU BOUTON RADIO ACTIF */
     div[data-testid="stRadio"] div[data-baseweb="radio"] div:first-child {
         background-color: transparent !important;
         border-color: #F472B6 !important;
@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS
+# Sources RSS (incluant les 4 nouvelles)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -207,6 +207,10 @@ SOURCES = [
     {"name": "Webdesignertrends", "url": "https://www.webdesignertrends.com/feed/"},
     {"name": "Les Numériques (Photo)", "url": "https://www.lesnumeriques.com/photo/rss.xml"},
     {"name": "Korben", "url": "https://korben.info/feed"},
+    {"name": "Journal du Geek", "url": "https://www.journaldugeek.com/feed/"},
+    {"name": "Mac4Ever", "url": "https://www.mac4ever.com/rss"},
+    {"name": "Olivier Rocq", "url": "https://www.olivier-rocq.com/feed/"},
+    {"name": "ZDNet FR", "url": "https://www.zdnet.fr/rss/news/"},
 ]
 
 KEYWORDS = {
