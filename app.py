@@ -9,10 +9,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Lisibilité, pastille rose (#F472B6), champ de recherche et masquage du header/footer Streamlit
+# Style CSS : Masquage des menus Streamlit, thème sombre, cartes et boutons
 st.markdown("""
 <style>
-    /* Masquer le header Streamlit (Stop, Fork, GitHub) et le footer (badge/couronne) */
+    /* Masquer le header (Stop, Fork, GitHub) et le footer (badge/couronne) */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -41,17 +41,11 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* Pastille de sélection de catégorie en rose (#F472B6) */
+    /* Pastille rose (#F472B6) */
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] {
         border-color: #F472B6 !important;
     }
     div[data-testid="stRadio"] div[role="radiogroup"] [aria-checked="true"] div {
-        background-color: #F472B6 !important;
-    }
-    div[data-baseweb="radio"] [aria-checked="true"] {
-        border-color: #F472B6 !important;
-    }
-    div[data-baseweb="radio"] [aria-checked="true"] div {
         background-color: #F472B6 !important;
     }
 
@@ -78,6 +72,11 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {
         border-color: #8b5cf6 !important;
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
+    }
+    
+    /* Arrondir les images insérées dans les cartes */
+    div[data-testid="stImage"] img {
+        border-radius: 10px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -131,7 +130,29 @@ KEYWORDS = {
 }
 
 def clean_text(raw_html):
+    """Supprime les balises HTML du texte de description"""
     return re.sub(r'<.*?>', '', raw_html)
+
+def extract_image_url(entry):
+    """Extrait l'URL de l'image depuis les métadonnées RSS ou le HTML du résumé"""
+    # 1. Cherche dans media_content
+    if 'media_content' in entry and len(entry.media_content) > 0:
+        return entry.media_content[0].get('url')
+    # 2. Cherche dans media_thumbnail
+    if 'media_thumbnail' in entry and len(entry.media_thumbnail) > 0:
+        return entry.media_thumbnail[0].get('url')
+    # 3. Cherche dans les fichiers joints (enclosures)
+    if 'enclosures' in entry and len(entry.enclosures) > 0:
+        for enc in entry.enclosures:
+            if enc.get('type', '').startswith('image/'):
+                return enc.get('href')
+    # 4. Recherche d'une balise <img> dans le résumé HTML
+    summary_raw = entry.get('summary', '') or entry.get('description', '')
+    img_match = re.search(r'<img [^>]*src=["\']([^"\']+)["\']', summary_raw)
+    if img_match:
+        return img_match.group(1)
+        
+    return None
 
 # Filtres de catégories
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo"]
@@ -151,6 +172,7 @@ with st.spinner("Chargement des articles de Krea..."):
             title = entry.get("title", "")
             summary = clean_text(entry.get("summary", entry.get("description", "")))
             text_to_check = f"{title} {summary}".lower()
+            image_url = extract_image_url(entry)
             
             if selected_category == "Tous":
                 cat_match = True
@@ -168,7 +190,8 @@ with st.spinner("Chargement des articles de Krea..."):
                     "title": title,
                     "link": entry.get("link", "#"),
                     "source": feed["name"],
-                    "summary": summary[:200] + "..." if len(summary) > 200 else summary,
+                    "summary": summary[:180] + "..." if len(summary) > 180 else summary,
+                    "image": image_url
                 })
 
 if all_articles:
@@ -177,6 +200,10 @@ if all_articles:
         col = cols[idx % 3]
         with col:
             with st.container(border=True):
+                # Afficher l'image si elle est présente
+                if article["image"]:
+                    st.image(article["image"], use_container_width=True)
+                
                 st.caption(f"📍 {article['source']}")
                 st.markdown(f"**{article['title']}**")
                 st.write(article['summary'])
