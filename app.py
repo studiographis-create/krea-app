@@ -219,7 +219,7 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea (Agrandis et espace réduit en haut)
+# Logo SVG Krea
 st.markdown("""
 <div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
@@ -248,7 +248,6 @@ st.markdown("""
 
 # Sources RSS 100% fiables
 SOURCES = [
-    {"name": "Info-Lux", "url": "https://www.info-lux.com/feed/"},
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
@@ -430,7 +429,7 @@ def fetch_all_feeds():
             for entry in parsed.entries[:8]:
                 link = entry.get("link", "#")
                 
-                # Filtrer les articles issus de rubriques non créatives (ex: développement personnel, santé, etc.)
+                # Filtrer les articles issus de rubriques non créatives
                 if any(bad_cat in link.lower() for bad_cat in EXCLUDED_CATEGORIES):
                     continue
 
@@ -512,7 +511,7 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     elif selected_category == "Expos photos":
-        expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe", "Info-Lux"]
+        expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe"]
         is_expos_source = any(src in art["source"] for src in expos_sources)
         kw_list = KEYWORDS.get("Expos photos", [])
         kw_match = any(kw in text_to_check for kw in kw_list)
