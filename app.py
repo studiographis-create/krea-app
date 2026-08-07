@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Fond graphique, thématique sombre et forçage STRICT du rose (#F472B6)
+# Style CSS : Correction radicale du cercle radio rouge de Streamlit
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -23,11 +23,6 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
-
-    /* Surcharge de la couleur primaire globale de Streamlit pour supprimer le rouge */
-    :root {
-        --primary-color: #F472B6 !important;
-    }
 
     /* Fond d'écran général avec effet mesh gradient créatif en haut de page */
     .stApp {
@@ -76,23 +71,22 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* FORÇAGE EXPLICITE DE LA PASTILLE RADIO ROSE (#F472B6) */
-    div[data-testid="stRadio"] [role="radiogroup"] [aria-checked="true"] {
+    /* FORÇAGE RADICAL DE LA COULEUR DU BOUTON RADIO ACTIF (Élimine le rouge natif) */
+    div[data-testid="stRadio"] div[data-baseweb="radio"] div:first-child {
+        background-color: transparent !important;
         border-color: #F472B6 !important;
     }
-    div[data-testid="stRadio"] [role="radiogroup"] [aria-checked="true"] * {
-        border-color: #F472B6 !important;
-        background-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] div[data-baseweb="radio"] div {
-        border-color: #F472B6 !important;
-    }
-    div[data-testid="stRadio"] input[type="radio"]:checked + div {
+    div[data-testid="stRadio"] input:checked + div {
         background-color: #F472B6 !important;
         border-color: #F472B6 !important;
     }
-    div[data-testid="stRadio"] input[type="radio"] {
-        accent-color: #F472B6 !important;
+    div[data-testid="stRadio"] div[role="radiogroup"] label div[aria-checked="true"] {
+        background-color: #F472B6 !important;
+        border-color: #F472B6 !important;
+    }
+    div[data-testid="stRadio"] [data-baseweb="radio"] [aria-checked="true"] {
+        background-color: #F472B6 !important;
+        border-color: #F472B6 !important;
     }
 
     /* UNIFORMISATION BLANCHE LISIBLE DES CHAMPS "Source" ET "Mot-clé" */
@@ -404,7 +398,7 @@ for art in all_fetched:
     else:
         search_match = search_query.lower().strip() in text_to_check
         
-    if cat_match and source_match and search_match:
+    if cat_match and search_match and source_match:
         extracted_url = art["image_url"]
         img_data = fetch_image_data(extracted_url) if extracted_url else None
         final_img = img_data if img_data is not None else get_unique_fallback(art["title"])
