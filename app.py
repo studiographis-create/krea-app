@@ -246,40 +246,68 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Dialog pour installer l'application
+@st.dialog("📱 Installer Krea sur votre appareil")
+def show_install_instructions():
+    st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
+    st.markdown("""
+    **🍎 Sur iPhone / iPad (Safari)**:
+    1. Appuyez sur le bouton de **Partage** (carré avec une flèche vers le haut).
+    2. Faites défiler vers le bas et choisissez **"Sur l'écran d'accueil"**.
+    3. Validez avec **"Ajouter"**.
+
+    **🤖 Sur Android (Chrome)**:
+    1. Appuyez sur les **trois points** ⋮ dans le coin supérieur droit.
+    2. Sélectionnez **"Installer l'application"** ou **"Ajouter à l'écran d'accueil"**.
+
+    **💻 Sur PC / Mac (Chrome / Edge)**:
+    1. Cliquez sur les **trois points** ⋮ dans la barre d'adresse du navigateur.
+    2. Cherchez **"Enregistrer et partager"** ou **"Applications"**.
+    3. Choisissez **"Installer cette application"** ou **"Créer un raccourci"**.
+    """)
+
 # Initialisation de la session
 if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = set()
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea
-st.markdown("""
-<div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
-      <defs>
-        <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#8B5CF6" />
-          <stop offset="100%" stop-color="#2563EB" />
-        </linearGradient>
-        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
-        </linearGradient>
-      </defs>
-      <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
-      <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
-      <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
-        <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
-        <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
-      </g>
-      <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
-      <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
-      <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
-    </svg>
-</div>
-""", unsafe_allow_html=True)
+# Logo SVG Krea + Bouton Installation
+col_logo, col_inst = st.columns([4, 1])
+with col_logo:
+    st.markdown("""
+    <div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
+          <defs>
+            <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6" />
+              <stop offset="100%" stop-color="#2563EB" />
+            </linearGradient>
+            <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
+          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
+          <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
+            <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
+            <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
+          </g>
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
+          <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
+        </svg>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Sources RSS 100% fiables
+with col_inst:
+    st.write("")
+    st.write("")
+    if st.button("📱 Installer l'app"):
+        show_install_instructions()
+
+# Sources RSS
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -305,7 +333,7 @@ SOURCES = [
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
-# Liste des sous-rubriques hors-sujet à filtrer obligatoirement
+# (Le reste du code reste inchangé ci-dessous)
 EXCLUDED_CATEGORIES = [
     "developpement-personnel", "sante", "bien-etre", "politique", 
     "fait-divers", "societe", "lifestyle", "psycho", "sante-bien-etre"
@@ -461,8 +489,6 @@ def fetch_all_feeds():
             parsed = feedparser.parse(feed["url"])
             for entry in parsed.entries[:8]:
                 link = entry.get("link", "#")
-                
-                # Filtrer les articles issus de rubriques non créatives
                 if any(bad_cat in link.lower() for bad_cat in EXCLUDED_CATEGORIES):
                     continue
 
@@ -490,27 +516,19 @@ def fetch_all_feeds():
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
-# Charger tous les articles
 all_fetched = fetch_all_feeds()
-
-# Filtres de catégories + Onglet Favoris
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "⭐ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
-# Barre d'outils : Source, Recherche, Mode Affichage, Bouton Actualiser
 col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
-
 with col_source:
     source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
     selected_source = st.selectbox("Source :", source_options)
-
 with col_search:
     search_query = st.text_input("🔍 Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
-
 with col_view:
     st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
     view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
-
 with col_refresh:
     st.write("")
     st.write("")
@@ -518,9 +536,7 @@ with col_refresh:
         st.cache_data.clear()
         st.rerun()
 
-# Mots-clés Tendances (Trending Tags)
 st.write("🔥 **Tendances du moment :**")
-
 tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 for idx, tag in enumerate(tags):
@@ -531,18 +547,13 @@ for idx, tag in enumerate(tags):
 
 st.divider()
 
-# Filtrage des articles
 filtered_articles = []
 for art in all_fetched:
     text_to_check = f"{art['title']} {art['summary']}".lower()
-    
-    # Filtre Favoris
     if selected_category == "⭐ Favoris":
-        if art["link"] not in st.session_state.bookmarks:
-            continue
+        if art["link"] not in st.session_state.bookmarks: continue
         cat_match = True
-    elif selected_category == "Tous":
-        cat_match = True
+    elif selected_category == "Tous": cat_match = True
     elif selected_category == "Expos photos":
         expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe"]
         is_expos_source = any(src in art["source"] for src in expos_sources)
@@ -552,85 +563,53 @@ for art in all_fetched:
     else:
         kw_list = KEYWORDS.get(selected_category, [])
         cat_match = any(kw in text_to_check for kw in kw_list)
-        
-    # Filtre Source
-    if selected_source != "Toutes les sources" and art["source"] != selected_source:
-        source_match = False
-    else:
-        source_match = True
-
-    # Filtre Recherche
-    if not search_query.strip():
-        search_match = True
-    else:
-        search_match = search_query.lower().strip() in text_to_check
-        
+    if selected_source != "Toutes les sources" and art["source"] != selected_source: source_match = False
+    else: source_match = True
+    if not search_query.strip(): search_match = True
+    else: search_match = search_query.lower().strip() in text_to_check
     if cat_match and search_match and source_match:
         art_copy = art.copy()
         art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
         filtered_articles.append(art_copy)
 
-# Exportation des favoris si on est dans l'onglet favoris
 if selected_category == "⭐ Favoris" and filtered_articles:
     col_fav_title, col_fav_exp = st.columns([3, 1])
-    with col_fav_title:
-        st.subheader(f"📌 Vos articles favoris ({len(filtered_articles)})")
+    with col_fav_title: st.subheader(f"📌 Vos articles favoris ({len(filtered_articles)})")
     with col_fav_exp:
         json_favs = json.dumps(filtered_articles, indent=2, ensure_ascii=False)
-        st.download_button(
-            "📥 Exporter les favoris (JSON)",
-            data=json_favs,
-            file_name="favoris_krea.json",
-            mime="application/json",
-            use_container_width=True
-        )
+        st.download_button("📥 Exporter les favoris (JSON)", data=json_favs, file_name="favoris_krea.json", mime="application/json", use_container_width=True)
 
-# AFFICHAGE
 if filtered_articles:
-    # 1. BANNIÈRE "À LA UNE" (Hero - uniquement en mode Grille)
     show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "Grille")
-    
     start_idx = 0
     if show_hero and len(filtered_articles) > 0:
         hero = filtered_articles[0]
         start_idx = 1
         cat_color = CATEGORY_COLORS.get(hero['category'], "#64748B")
-        
         with st.container(border=True):
             st.markdown('<span class="hero-badge">🔥 À LA UNE</span>', unsafe_allow_html=True)
             col_hero_img, col_hero_text = st.columns([1.2, 1])
             with col_hero_img:
-                st.markdown(
-                    f'<img src="{hero["image_url"]}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', 
-                    unsafe_allow_html=True
-                )
+                st.markdown(f'<img src="{hero["image_url"]}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', unsafe_allow_html=True)
             with col_hero_text:
                 st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{hero["category"]}</span>', unsafe_allow_html=True)
                 st.caption(f"📍 **{hero['source']}** • 🕒 {hero['relative_date']} • {hero['reading_time']}")
                 st.markdown(f"### {hero['title']}")
                 st.write(hero['summary'][:220] + "..." if len(hero['summary']) > 220 else hero['summary'])
-                
                 c1, c2, c3 = st.columns([1.5, 1, 1])
-                with c1:
-                    st.link_button("Lire l'article", hero['link'], use_container_width=True)
+                with c1: st.link_button("Lire l'article", hero['link'], use_container_width=True)
                 with c2:
-                    if st.button("Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True):
-                        open_preview_modal(hero)
+                    if st.button("Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True): open_preview_modal(hero)
                 with c3:
                     is_fav = hero['link'] in st.session_state.bookmarks
                     fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
                     if st.button(fav_icon, key=f"fav_hero_{hero['id']}", use_container_width=True):
-                        if is_fav:
-                            st.session_state.bookmarks.remove(hero['link'])
-                        else:
-                            st.session_state.bookmarks.add(hero['link'])
+                        if is_fav: st.session_state.bookmarks.remove(hero['link'])
+                        else: st.session_state.bookmarks.add(hero['link'])
                         st.rerun()
-
         st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. AFFICHAGE DES ARTICLES (Grille vs Liste Compacte)
     grid_articles = filtered_articles[start_idx:]
-    
     if view_mode == "Grille":
         cols = st.columns(3)
         for idx, article in enumerate(grid_articles):
@@ -638,64 +617,46 @@ if filtered_articles:
             cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
             with col:
                 with st.container(border=True):
-                    st.markdown(
-                        f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:8px; display:block;">', 
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:8px; display:block;">', unsafe_allow_html=True)
                     st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>', unsafe_allow_html=True)
                     st.caption(f"📍 **{article['source']}** • {article['relative_date']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
-                    
                     c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
-                    with c_read:
-                        st.link_button("Lire", article['link'], use_container_width=True)
+                    with c_read: st.link_button("Lire", article['link'], use_container_width=True)
                     with c_prev:
-                        if st.button("Aperçu", key=f"prev_{article['id']}", use_container_width=True):
-                            open_preview_modal(article)
+                        if st.button("Aperçu", key=f"prev_{article['id']}", use_container_width=True): open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
                         fav_icon = "⭐" if is_fav else "☆"
                         if st.button(fav_icon, key=f"fav_{article['id']}", use_container_width=True):
-                            if is_fav:
-                                st.session_state.bookmarks.remove(article['link'])
-                            else:
-                                st.session_state.bookmarks.add(article['link'])
+                            if is_fav: st.session_state.bookmarks.remove(article['link'])
+                            else: st.session_state.bookmarks.add(article['link'])
                             st.rerun()
-
-    else: # MODE LISTE COMPACTE
+    else:
         for article in grid_articles:
             cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
             with st.container(border=True):
                 c_img, c_content = st.columns([0.8, 3.2])
                 with c_img:
-                    st.markdown(
-                        f'<img src="{article["image_url"]}" style="width:100%; height:110px; object-fit:cover; border-radius:8px; display:block;">', 
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:110px; object-fit:cover; border-radius:8px; display:block;">', unsafe_allow_html=True)
                 with c_content:
                     st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>', unsafe_allow_html=True)
                     st.caption(f"📍 **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
-                    
                     c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
-                    with c_read:
-                        st.link_button("Lire l'article", article['link'], use_container_width=True)
+                    with c_read: st.link_button("Lire l'article", article['link'], use_container_width=True)
                     with c_prev:
-                        if st.button("Aperçu", key=f"prev_list_{article['id']}", use_container_width=True):
-                            open_preview_modal(article)
+                        if st.button("Aperçu", key=f"prev_list_{article['id']}", use_container_width=True): open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
                         fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
                         if st.button(fav_icon, key=f"fav_list_{article['id']}", use_container_width=True):
-                            if is_fav:
-                                st.session_state.bookmarks.remove(article['link'])
-                            else:
-                                st.session_state.bookmarks.add(article['link'])
+                            if is_fav: st.session_state.bookmarks.remove(article['link'])
+                            else: st.session_state.bookmarks.add(article['link'])
                             st.rerun()
-
 elif selected_category == "⭐ Favoris":
-    st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris. Cliquez sur le bouton ☆ sous un article pour l'ajouter ici.")
+    st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris.")
 else:
     st.info("Aucun article trouvé pour ces critères.")
