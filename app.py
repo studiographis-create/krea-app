@@ -14,7 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Thème sombre, cartes, badges, et masquage des menus Streamlit
+# Style CSS : Fond graphique lumineux en haut (Mesh gradient), cartes, badges et masquage des menus Streamlit
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -24,17 +24,27 @@ st.markdown("""
     footer {visibility: hidden;}
     div[data-testid="stDecoration"] {display: none;}
 
+    /* Fond d'écran général avec effet mesh gradient créatif en haut de page */
     .stApp {
         background-color: #0b0f19;
+        background-image: 
+            radial-gradient(at 15% 10%, rgba(139, 92, 246, 0.22) 0px, transparent 40%),
+            radial-gradient(at 85% 5%, rgba(37, 99, 235, 0.20) 0px, transparent 45%),
+            radial-gradient(at 50% 18%, rgba(244, 114, 182, 0.15) 0px, transparent 40%),
+            radial-gradient(at 70% 25%, rgba(6, 182, 212, 0.12) 0px, transparent 35%);
+        background-repeat: no-repeat;
         color: #f1f5f9;
     }
     
-    /* Bloc de sélection des catégories */
+    /* Bloc de sélection des catégories avec fond glassmorphism */
     div[data-testid="stRadio"] {
-        background-color: #1e293b !important;
+        background-color: rgba(30, 41, 59, 0.75) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
         padding: 14px 20px !important;
         border-radius: 14px !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
     }
     div[data-testid="stRadio"] label {
         color: #ffffff !important;
@@ -57,9 +67,10 @@ st.markdown("""
 
     /* Champs de recherche et de sélection */
     div[data-testid="stTextInput"] input, div[data-baseweb="select"] > div {
-        background-color: #1e293b !important;
+        background-color: rgba(30, 41, 59, 0.8) !important;
+        backdrop-filter: blur(8px) !important;
         color: #ffffff !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 10px !important;
     }
     div[data-testid="stTextInput"] label p, div[data-testid="stSelectbox"] label p {
@@ -69,9 +80,9 @@ st.markdown("""
 
     /* Bouton d'actualisation */
     div[data-testid="stButton"] button {
-        background-color: #1e293b !important;
+        background-color: rgba(30, 41, 59, 0.8) !important;
         color: #f1f5f9 !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
         transition: all 0.2s ease;
@@ -79,6 +90,7 @@ st.markdown("""
     div[data-testid="stButton"] button:hover {
         border-color: #F472B6 !important;
         color: #F472B6 !important;
+        box-shadow: 0 0 15px rgba(244, 114, 182, 0.3);
     }
 
     /* Style des cartes d'articles */
@@ -94,7 +106,7 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(139, 92, 246, 0.15);
     }
 
-    /* Badges Meta (Source, Date, Temps) */
+    /* Badges Meta */
     .hero-badge {
         background-color: #F472B6;
         color: #0f172a;
@@ -116,7 +128,7 @@ if "bookmarks" not in st.session_state:
 
 # Logo SVG Krea
 st.markdown("""
-<div style="margin-bottom: 20px;">
+<div style="margin-bottom: 20px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="340" style="max-width: 100%; height: auto;">
       <defs>
         <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -261,7 +273,6 @@ def fetch_all_feeds():
                 "reading_time": estimate_reading_time(summary),
                 "image_url": extracted_url
             })
-    # Tri du plus récent au plus ancien
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
