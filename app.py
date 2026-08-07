@@ -196,6 +196,7 @@ st.markdown("""
 
 # Sources RSS 100% fiables et structurées
 SOURCES = [
+    {"name": "Info-Lux", "url": "https://www.info-lux.com/feed/"},
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
@@ -390,7 +391,7 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     elif selected_category == "Expos photos":
-        expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe"]
+        expos_sources = ["L'Œil de la Photographie", "Blind Magazine", "Graine de Photographe", "Info-Lux"]
         is_expos_source = any(src in art["source"] for src in expos_sources)
         kw_list = KEYWORDS.get("Expos photos", [])
         kw_match = any(kw in text_to_check for kw in kw_list)
