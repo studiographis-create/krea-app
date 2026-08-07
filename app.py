@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Mesh gradient, Glassmorphism & Animations Hover Lift
+# Style CSS : Mesh gradient, Glassmorphism & Animations
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -51,7 +51,15 @@ st.markdown("""
         background-color: transparent !important;
     }
 
-    /* Radio Filter Bar */
+    /* Labels de tous les champs (Source, Mot-clé, Affichage, etc.) en blanc très clair et lisible */
+    div[data-testid="stWidgetLabel"] p, label p, label {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        opacity: 1 !important;
+    }
+
+    /* Radio Filter Bar (Catégories) */
     div[data-testid="stRadio"] {
         background-color: rgba(30, 41, 59, 0.75) !important;
         backdrop-filter: blur(12px) !important;
@@ -62,10 +70,6 @@ st.markdown("""
     }
     div[data-testid="stRadio"] label {
         color: #ffffff !important;
-        font-weight: 700 !important;
-    }
-    div[data-testid="stRadio"] p {
-        color: #cbd5e1 !important;
         font-weight: 700 !important;
     }
 
@@ -84,7 +88,7 @@ st.markdown("""
         color: #0f172a !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 10px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
     }
     div[data-baseweb="select"] > div {
         background-color: #f8fafc !important;
@@ -111,7 +115,7 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(244, 114, 182, 0.3) !important;
     }
 
-    /* Cards - Hover Lift & Glow Effect */
+    /* Cards standard - Hover Lift & Glow Effect */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
@@ -123,6 +127,20 @@ st.markdown("""
         transform: translateY(-5px) !important;
         border-color: #8b5cf6 !important;
         box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
+    }
+
+    /* Mise en évidence spécifique du bloc À LA UNE (Fond plus sombre & glassmorphism) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.hero-badge) {
+        background-color: rgba(15, 23, 42, 0.92) !important;
+        backdrop-filter: blur(16px) !important;
+        border: 1.5px solid rgba(244, 114, 182, 0.35) !important;
+        border-radius: 18px !important;
+        padding: 20px !important;
+        box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45) !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.hero-badge):hover {
+        border-color: #F472B6 !important;
+        box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
     }
 
     /* Category Badges Styling */
@@ -143,11 +161,12 @@ st.markdown("""
         color: #0f172a;
         font-weight: 800;
         font-size: 0.75rem;
-        padding: 3px 10px;
+        padding: 4px 12px;
         border-radius: 20px;
         text-transform: uppercase;
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -406,7 +425,7 @@ with col_search:
     search_query = st.text_input("🔍 Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
 
 with col_view:
-    view_mode = st.radio("Affichage :", ["🎴 Grille", "📑 Liste compacte"], horizontal=True)
+    view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
 
 with col_refresh:
     st.write("")
@@ -484,7 +503,7 @@ if selected_category == "⭐ Favoris" and filtered_articles:
 # AFFICHAGE
 if filtered_articles:
     # 1. BANNIÈRE "À LA UNE" (Hero - uniquement en mode Grille)
-    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "🎴 Grille")
+    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "Grille")
     
     start_idx = 0
     if show_hero and len(filtered_articles) > 0:
@@ -527,7 +546,7 @@ if filtered_articles:
     # 2. AFFICHAGE DES ARTICLES (Grille vs Liste Compacte)
     grid_articles = filtered_articles[start_idx:]
     
-    if view_mode == "🎴 Grille":
+    if view_mode == "Grille":
         cols = st.columns(3)
         for idx, article in enumerate(grid_articles):
             col = cols[idx % 3]
