@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS : Mesh gradient, Glassmorphism & Animations
+# Style CSS : Mesh gradient, Glassmorphism & Responsive Rules
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
@@ -141,6 +141,24 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.hero-badge):hover {
         border-color: #F472B6 !important;
         box-shadow: 0 14px 40px rgba(244, 114, 182, 0.25) !important;
+    }
+
+    /* Adaptation des boutons de tendances : 3 par ligne sur smartphone, 6 sur 1 ligne sur ordinateur */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has(.tag-marker) {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 6px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tag-marker) > div[data-testid="stColumn"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(.tag-marker) button p {
+            font-size: 0.82rem !important;
+            white-space: nowrap !important;
+        }
     }
 
     /* Category Badges Styling */
@@ -430,7 +448,7 @@ with col_view:
 with col_refresh:
     st.write("")
     st.write("")
-    if st.button("🔄 Actualiser", use_container_width=True):
+    if st.button("Actualiser", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
@@ -440,6 +458,8 @@ tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 for idx, tag in enumerate(tags):
     with tag_cols[idx]:
+        if idx == 0:
+            st.markdown('<span class="tag-marker"></span>', unsafe_allow_html=True)
         if st.button(f"#{tag}", use_container_width=True):
             st.session_state.search_input = tag
             st.rerun()
