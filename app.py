@@ -195,7 +195,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sources RSS (incluant les 4 nouvelles)
+# Sources RSS (liste complète enrichie)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
@@ -211,6 +211,10 @@ SOURCES = [
     {"name": "Mac4Ever", "url": "https://www.mac4ever.com/rss"},
     {"name": "Olivier Rocq", "url": "https://www.olivier-rocq.com/feed/"},
     {"name": "ZDNet FR", "url": "https://www.zdnet.fr/rss/news/"},
+    {"name": "Le Monde Informatique", "url": "https://www.lemondeinformatique.fr/rss/rss.xml"},
+    {"name": "ActuIA", "url": "https://www.actuia.com/feed/"},
+    {"name": "L'Usine Digitale", "url": "https://www.usine-digitale.fr/rss"},
+    {"name": "RTBF - IA", "url": "https://www.rtbf.be/rss/tag_intelligence-artificielle.xml"},
 ]
 
 KEYWORDS = {
