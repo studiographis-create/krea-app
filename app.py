@@ -7,13 +7,69 @@ import json
 import urllib.parse
 from datetime import datetime, timezone
 import time
+import base64
 
-# Configuration de la page Streamlit avec icône d'onglet
+# SVG pur HD du logo Krea (cartes violet/cyan, k incliné, étoile rose)
+KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#0b0f19"/>
+  <rect x="18" y="18" width="62" height="62" rx="14" fill="url(#g2)" transform="rotate(-6 49 49)"/>
+  <rect x="12" y="12" width="62" height="62" rx="14" fill="url(#g1)"/>
+  <text x="43" y="56" font-family="sans-serif" font-weight="900" font-size="44" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 43 56)">k</text>
+  <path d="M 72 6 Q 72 14 80 14 Q 72 14 72 22 Q 72 14 64 14 Q 72 14 72 6 Z" fill="#F472B6"/>
+</svg>"""
+
+krea_b64_svg = base64.b64encode(KREA_SVG_ICON.encode('utf-8')).decode('utf-8')
+svg_data_uri = f"data:image/svg+xml;base64,{krea_b64_svg}"
+
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
-    page_icon="☆",
+    page_icon="🎨",
     layout="wide"
 )
+
+# Force l'injection du favicon Krea en SVG HD dans l'en-tête HTML de la page
+st.markdown(f"""
+<head>
+    <link rel="icon" type="image/svg+xml" href="{svg_data_uri}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{svg_data_uri}">
+    <link rel="apple-touch-icon" href="{svg_data_uri}">
+</head>
+<script>
+(function() {{
+    var svgUri = "{svg_data_uri}";
+    function setFavicon() {{
+        var doc = window.parent ? window.parent.document : document;
+        if (!doc) return;
+        var links = doc.querySelectorAll("link[rel*='icon']");
+        links.forEach(function(l) {{
+            l.href = svgUri;
+            l.type = "image/svg+xml";
+        }});
+        if (links.length === 0) {{
+            var link = doc.createElement('link');
+            link.rel = 'shortcut icon';
+            link.type = 'image/svg+xml';
+            link.href = svgUri;
+            doc.head.appendChild(link);
+        }}
+    }}
+    setFavicon();
+    setTimeout(setFavicon, 300);
+    setTimeout(setFavicon, 1000);
+}})();
+</script>
+""", unsafe_allow_html=True)
 
 # Style CSS : Mesh gradient, Glassmorphism & Responsive
 st.markdown("""
