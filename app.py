@@ -277,36 +277,39 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea principal
-st.markdown("""
-<div style="margin-top: 0px; margin-bottom: 10px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
-      <defs>
-        <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#8B5CF6" />
-          <stop offset="100%" stop-color="#2563EB" />
-        </linearGradient>
-        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
-          <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
-        </linearGradient>
-      </defs>
-      <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
-      <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
-      <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
-        <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
-        <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
-      </g>
-      <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
-      <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
-      <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
-    </svg>
-</div>
-""", unsafe_allow_html=True)
+# En-tête : Logo SVG Krea (à gauche) + Bouton Installation (à droite)
+col_logo, col_inst = st.columns([3.5, 1])
+with col_logo:
+    st.markdown("""
+    <div style="margin-top: 0px; margin-bottom: 10px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
+          <defs>
+            <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6" />
+              <stop offset="100%" stop-color="#2563EB" />
+            </linearGradient>
+            <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
+          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
+          <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
+            <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
+            <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
+          </g>
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
+          <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
+        </svg>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Bouton "Installer l'app" aligné sur la gauche
-if st.button("📱 Installer l'app"):
-    show_install_instructions()
+with col_inst:
+    st.write("")
+    if st.button("📱 Installer l'app", use_container_width=True):
+        show_install_instructions()
 
 st.markdown("<br>", unsafe_allow_html=True)
 
