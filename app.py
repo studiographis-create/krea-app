@@ -396,7 +396,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # Sources RSS
 SOURCES = [
-    {"name": "Siècle Digital", "url": "https://www.siecledigital.fr/feed/"},
+    {"name": "TechRadar (Photoshop)", "url": "https://global.techradar.com/fr-fr/tag/photoshop/feed/"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
