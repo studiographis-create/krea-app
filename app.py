@@ -250,6 +250,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "MacGeneration", "url": "https://www.macg.co/feed"},
     {"name": "Le Monde Informatique - Adobe", "url": "https://www.lemondeinformatique.fr/rss/marque/adobe-68.xml"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
@@ -647,6 +648,6 @@ st.markdown("""
           <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
-    <p style="color: #A8A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
+    <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
 </div>
 """, unsafe_allow_html=True)
