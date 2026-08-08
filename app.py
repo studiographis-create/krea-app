@@ -23,7 +23,7 @@ svg_data_uri = f"data:image/svg+xml;base64,{krea_b64_svg}"
 
 st.set_page_config(page_title="Krea — L'Actu Créative & IA", page_icon="🎨", layout="wide")
 
-# Injection Favicon
+# Injection Favicon et CSS correct
 st.markdown(f"""
 <script>
 (function() {{
@@ -34,13 +34,15 @@ st.markdown(f"""
 }})();
 </script>
 <style>
-    header {visibility: hidden;}
-    .stApp {background-color: #0b0f19; color: #f1f5f9;}
-    div[data-testid="stVerticalBlockBorderWrapper"] {background-color: #161e2e !important; border: 1px solid #1e293b !important; border-radius: 14px !important; padding: 14px !important;}
-    .article-read { opacity: 0.65; filter: grayscale(15%); }
-    .cat-badge { font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }
-    .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
-    .hero-badge { background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }
+    header {{visibility: hidden;}}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    .stApp {{background-color: #0b0f19; color: #f1f5f9;}}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{background-color: #161e2e !important; border: 1px solid #1e293b !important; border-radius: 14px !important; padding: 14px !important;}}
+    .article-read {{ opacity: 0.65; filter: grayscale(15%); }}
+    .cat-badge {{ font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }}
+    .read-badge {{ font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }}
+    .hero-badge {{ background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,7 +52,7 @@ def show_install_instructions():
     st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
     st.markdown("""
     **💻 Sur Ordinateur (Chrome/Edge/Brave)**:
-    - Cherchez l'icône d'installation (écran avec flèche) dans la barre d'adresse, ou allez dans le menu (trois points) -> **Installer Krea**.
+    - Cherchez l'icône d'installation dans la barre d'adresse, ou allez dans le menu (trois points) -> **Installer Krea**.
     
     **🍎 Sur iPhone / iPad (Safari)**:
     - Appuyez sur le bouton de **Partage** (carré avec flèche).
