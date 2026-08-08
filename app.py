@@ -1,13 +1,13 @@
-import streamlit as st
-import feedparser
-import re
-import requests
+import base64
+from collections import Counter
+from datetime import datetime, timezone
 import hashlib
 import json
-import urllib.parse
-from datetime import datetime, timezone
+import re
 import time
-import base64
+import urllib.parse
+import feedparser
+import requests
 
 # SVG pur HD du logo Krea (cartes violet/cyan, k incliné, étoile rose)
 KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -28,18 +28,17 @@ KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"
   <path d="M 72 6 Q 72 14 80 14 Q 72 14 72 22 Q 72 14 64 14 Q 72 14 72 6 Z" fill="#F472B6"/>
 </svg>"""
 
-krea_b64_svg = base64.b64encode(KREA_SVG_ICON.encode('utf-8')).decode('utf-8')
+krea_b64_svg = base64.b64encode(KREA_SVG_ICON.encode("utf-8")).decode("utf-8")
 svg_data_uri = f"data:image/svg+xml;base64,{krea_b64_svg}"
 
 # Configuration de la page Streamlit
 st.set_page_config(
-    page_title="Krea — L'Actu Créative & IA",
-    page_icon="🎨",
-    layout="wide"
+    page_title="Krea — L'Actu Créative & IA", page_icon="🎨", layout="wide"
 )
 
 # Force l'injection du favicon Krea en SVG HD dans l'en-tête HTML de la page
-st.markdown(f"""
+st.markdown(
+    f"""
 <head>
     <link rel="icon" type="image/svg+xml" href="{svg_data_uri}">
     <link rel="shortcut icon" type="image/svg+xml" href="{svg_data_uri}">
@@ -69,10 +68,13 @@ st.markdown(f"""
     setTimeout(setFavicon, 1000);
 }})();
 </script>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Style CSS : Mesh gradient, Glassmorphism & Responsive intelligent
-st.markdown("""
+st.markdown(
+    """
 <style>
     html {
         scroll-behavior: smooth;
@@ -187,12 +189,15 @@ st.markdown("""
     .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
     .hero-badge { background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
 
 @st.dialog("⤓ Installer Krea sur votre appareil")
 def show_install_instructions():
-    st.write("Pour garder un accès rapide à Krea, installez-le sur votre appareil :")
-    st.markdown("""
+  st.write("Pour garder un accès rapide à Krea, installez-le sur votre appareil :")
+  st.markdown("""
     **💻 Sur PC / Mac (Chrome, Edge, Brave)**:
     1. Cliquez sur l'icône d'installation (écran avec une flèche) ou le menu (⋮) dans la barre d'adresse.
     2. Sélectionnez **"Installer Krea"**.
@@ -206,18 +211,25 @@ def show_install_instructions():
     2. Sélectionnez **"Installer l'application"** ou **"Ajouter à l'écran d'accueil"**.
     """)
 
-if "bookmarks" not in st.session_state: st.session_state.bookmarks = set()
-if "read_articles" not in st.session_state: st.session_state.read_articles = set()
-if "category_views" not in st.session_state: st.session_state.category_views = {}
-if "articles_limit" not in st.session_state: st.session_state.articles_limit = 12
-if "search_input" not in st.session_state: st.session_state.search_input = ""
+
+if "bookmarks" not in st.session_state:
+  st.session_state.bookmarks = set()
+if "read_articles" not in st.session_state:
+  st.session_state.read_articles = set()
+if "category_views" not in st.session_state:
+  st.session_state.category_views = {}
+if "articles_limit" not in st.session_state:
+  st.session_state.articles_limit = 12
+if "search_input" not in st.session_state:
+  st.session_state.search_input = ""
 
 # Ancre HTML pour le retour en haut
 st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
 col_logo, col_inst = st.columns([6, 1])
 with col_logo:
-    st.markdown("""
+  st.markdown(
+      """
     <div style="margin-top: 0px; margin-bottom: 10px;">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
           <defs>
@@ -239,12 +251,14 @@ with col_logo:
           <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
         </svg>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+      unsafe_allow_html=True,
+  )
 
 with col_inst:
-    st.write("")
-    if st.button("⤓ Installer"):
-        show_install_instructions()
+  st.write("")
+  if st.button("⤓ Installer"):
+    show_install_instructions()
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -254,336 +268,616 @@ SOURCES = [
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
     {"name": "Apprendre la Photo", "url": "https://apprendre-la-photo.fr/feed/"},
     {"name": "Créapills", "url": "https://creapills.com/feed"},
-    {"name": "Webdesignertrends", "url": "https://www.webdesignertrends.com/feed/"},
-    {"name": "Les Numériques (Photo)", "url": "https://www.lesnumeriques.com/photo/rss.xml"},
+    {
+        "name": "Webdesignertrends",
+        "url": "https://www.webdesignertrends.com/feed/",
+    },
+    {
+        "name": "Les Numériques (Photo)",
+        "url": "https://www.lesnumeriques.com/photo/rss.xml",
+    },
     {"name": "Korben", "url": "https://korben.info/feed"},
     {"name": "Journal du Geek", "url": "https://www.journaldugeek.com/feed/"},
     {"name": "Mac4Ever", "url": "https://www.mac4ever.com/rss"},
     {"name": "Olivier Rocq", "url": "https://www.olivier-rocq.com/feed/"},
     {"name": "ZDNet FR", "url": "https://www.zdnet.fr/rss/news/"},
-    {"name": "Le Monde Informatique", "url": "https://www.lemondeinformatique.fr/rss/rss.xml"},
+    {
+        "name": "Le Monde Informatique",
+        "url": "https://www.lemondeinformatique.fr/rss/rss.xml",
+    },
     {"name": "ActuIA", "url": "https://www.actuia.com/feed/"},
     {"name": "L'Usine Digitale", "url": "https://www.usine-digitale.fr/rss"},
-    {"name": "RTBF - IA", "url": "https://www.rtbf.be/rss/tag_intelligence-artificielle.xml"},
-    {"name": "L'Œil de la Photographie", "url": "https://loeildelaphotographie.com/fr/feed/"},
-    {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
+    {
+        "name": "RTBF - IA",
+        "url": "https://www.rtbf.be/rss/tag_intelligence-artificielle.xml",
+    },
+    {
+        "name": "L'Œil de la Photographie",
+        "url": "https://loeildelaphotographie.com/fr/feed/",
+    },
+    {
+        "name": "Graine de Photographe",
+        "url": "https://blog.grainedephotographe.com/feed/",
+    },
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
-EXCLUDED_CATEGORIES = ["developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho"]
+EXCLUDED_CATEGORIES = [
+    "developpement-personnel",
+    "sante",
+    "bien-etre",
+    "politique",
+    "fait-divers",
+    "societe",
+    "lifestyle",
+    "psycho",
+]
 
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement photo"],
     "InDesign": ["indesign", "mise en page", "typographie", "edition"],
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
-    "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
-    "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage"],
+    "Photo": [
+        "photo",
+        "photographie",
+        "appareil photo",
+        "objectif",
+        "portrait",
+        "paysage",
+    ],
+    "Expos photos": [
+        "exposition",
+        "expositions",
+        "expo photo",
+        "galerie",
+        "vernissage",
+    ],
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte"],
     "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "formation"],
-    "AI": ["ia", "intelligence artificielle", "midjourney", "firefly", "chatgpt", "dall-e", "stable diffusion"]
+    "AI": [
+        "ia",
+        "intelligence artificielle",
+        "midjourney",
+        "firefly",
+        "chatgpt",
+        "dall-e",
+        "stable diffusion",
+    ],
 }
 
 CATEGORY_COLORS = {
-    "Photoshop": "#38BDF8", "Lightroom": "#60A5FA", "InDesign": "#F43F5E",
-    "Illustrator": "#FB923C", "AI": "#A855F7", "Graphisme": "#EC4899",
-    "Photo": "#F59E0B", "Tutoriels": "#10B981", "Expos photos": "#E11D48", "Général": "#64748B"
+    "Photoshop": "#38BDF8",
+    "Lightroom": "#60A5FA",
+    "InDesign": "#F43F5E",
+    "Illustrator": "#FB923C",
+    "AI": "#A855F7",
+    "Graphisme": "#EC4899",
+    "Photo": "#F59E0B",
+    "Tutoriels": "#10B981",
+    "Expos photos": "#E11D48",
+    "Général": "#64748B",
 }
 
+
 def clean_text(raw_html):
-    if not raw_html: return ""
-    return re.sub(r'\s+', ' ', re.sub(r'<.*?>', ' ', raw_html)).strip()
+  if not raw_html:
+    return ""
+  return re.sub(r"\s+", " ", re.sub(r"<.*?>", " ", raw_html)).strip()
+
 
 def clean_url(url):
-    if not url: return None
-    url = url.strip()
-    if url.startswith("http"):
-        if any(b in url.lower() for b in ["gravatar", "pixel", "icon", "logo", ".svg"]): return None
-        return url
+  if not url:
     return None
+  url = url.strip()
+  if url.startswith("http"):
+    if any(
+        b in url.lower()
+        for b in ["gravatar", "pixel", "icon", "logo", ".svg"]
+    ):
+      return None
+    return url
+  return None
+
 
 def extract_image_url(entry):
-    if 'media_content' in entry:
-        for m in entry.media_content:
-            u = clean_url(m.get('url'))
-            if u: return u
-    if 'media_thumbnail' in entry:
-        for m in entry.media_thumbnail:
-            u = clean_url(m.get('url'))
-            if u: return u
-    for text_src in [entry.get('summary', ''), entry.get('description', '')]:
-        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
-        for src in matches:
-            u = clean_url(src)
-            if u: return u
-    return None
+  if "media_content" in entry:
+    for m in entry.media_content:
+      u = clean_url(m.get("url"))
+      if u:
+        return u
+  if "media_thumbnail" in entry:
+    for m in entry.media_thumbnail:
+      u = clean_url(m.get("url"))
+      if u:
+        return u
+  for text_src in [entry.get("summary", ""), entry.get("description", "")]:
+    matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
+    for src in matches:
+      u = clean_url(src)
+      if u:
+        return u
+  return None
+
 
 def parse_entry_date(entry):
-    for field in ['published_parsed', 'updated_parsed']:
-        if hasattr(entry, field) and getattr(entry, field):
-            return datetime.fromtimestamp(time.mktime(getattr(entry, field)), tz=timezone.utc)
-    return datetime.now(timezone.utc)
+  for field in ["published_parsed", "updated_parsed"]:
+    if hasattr(entry, field) and getattr(entry, field):
+      return datetime.fromtimestamp(
+          time.mktime(getattr(entry, field)), tz=timezone.utc
+      )
+  return datetime.now(timezone.utc)
+
 
 def format_relative_date(dt):
-    diff = datetime.now(timezone.utc) - dt
-    secs = int(diff.total_seconds())
-    if secs < 60: return "À l'instant"
-    mins = secs // 60
-    if mins < 60: return f"Il y a {mins} min"
-    hours = mins // 60
-    if hours < 24: return f"Il y a {hours} h"
-    days = hours // 24
-    if days < 7: return f"Il y a {days} j"
-    return dt.strftime("%d/%m/%Y")
+  diff = datetime.now(timezone.utc) - dt
+  secs = int(diff.total_seconds())
+  if secs < 60:
+    return "À l'instant"
+  mins = secs // 60
+  if mins < 60:
+    return f"Il y a {mins} min"
+  hours = mins // 60
+  if hours < 24:
+    return f"Il y a {hours} h"
+  days = hours // 24
+  if days < 7:
+    return f"Il y a {days} j"
+  return dt.strftime("%d/%m/%Y")
+
 
 def detect_category(title, summary, source_name):
-    text = f"{title} {summary}".lower()
-    for cat, kws in KEYWORDS.items():
-        for kw in kws:
-            if re.search(r'\b' + re.escape(kw) + r'\b', text):
-                return cat
-    if source_name in ["Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine"]:
-        return "Photo"
-    return "Général"
+  text = f"{title} {summary}".lower()
+  for cat, kws in KEYWORDS.items():
+    for kw in kws:
+      if re.search(r"\b" + re.escape(kw) + r"\b", text):
+        return cat
+  if source_name in [
+      "Phototrend",
+      "Apprendre la Photo",
+      "OuiOui Photo",
+      "Graine de Photographe",
+      "Blind Magazine",
+  ]:
+    return "Photo"
+  return "Général"
+
 
 @st.dialog("▤ Aperçu de l'article")
 def open_preview_modal(article):
-    st.session_state.read_articles.add(article["id"])
-    cat = article.get("category", "Général")
-    st.session_state.category_views[cat] = st.session_state.category_views.get(cat, 0) + 1
+  st.session_state.read_articles.add(article["id"])
+  cat = article.get("category", "Général")
+  st.session_state.category_views[cat] = (
+      st.session_state.category_views.get(cat, 0) + 1
+  )
 
-    if article.get("image_url"):
-        st.markdown(f'<img src="{article["image_url"]}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:12px;">', unsafe_allow_html=True)
-    st.markdown(f"### {article['title']}")
-    st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • 🕒 {max(1, len(article['summary'].split()) // 35)} min")
-    st.write(article['summary'])
-    
-    st.caption("📋 Copier le lien de l'article :")
-    st.code(article['link'], language="text")
-    
-    st.divider()
-    
-    encoded_url = urllib.parse.quote(article['link'])
-    encoded_title = urllib.parse.quote(article['title'])
-    
-    c1, c2, c3 = st.columns([2, 1, 1])
-    with c1: st.link_button("↗ Ouvrir le site", article['link'], use_container_width=True)
-    with c2: st.link_button("✉ WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
-    with c3: st.link_button("↗ 𝕏", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
+  if article.get("image_url"):
+    st.markdown(
+        f'<img src="{article["image_url"]}" style="width:100%; max-height:300px;'
+        ' object-fit:cover; border-radius:12px; margin-bottom:12px;">',
+        unsafe_allow_html=True,
+    )
+  st.markdown(f"### {article['title']}")
+  st.caption(
+      f"⌖ **{article['source']}** • {article['relative_date']} • 🕒"
+      f" {max(1, len(article['summary'].split()) // 35)} min"
+  )
+  st.write(article["summary"])
+
+  st.caption("📋 Copier le lien de l'article :")
+  st.code(article["link"], language="text")
+
+  st.divider()
+
+  encoded_url = urllib.parse.quote(article["link"])
+  encoded_title = urllib.parse.quote(article["title"])
+
+  c1, c2, c3 = st.columns([2, 1, 1])
+  with c1:
+    st.link_button(
+        "↗ Ouvrir le site", article["link"], use_container_width=True
+    )
+  with c2:
+    st.link_button(
+        "✉ WhatsApp",
+        f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}",
+        use_container_width=True,
+    )
+  with c3:
+    st.link_button(
+        "↗ 𝕏",
+        f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}",
+        use_container_width=True,
+    )
+
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_all_feeds():
-    articles = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    for feed in SOURCES:
-        try:
-            resp = requests.get(feed["url"], headers=headers, timeout=4)
-            if resp.status_code == 200:
-                parsed = feedparser.parse(resp.content)
-                for entry in parsed.entries[:4]:
-                    link = entry.get("link", "#")
-                    if any(bad in link.lower() for bad in EXCLUDED_CATEGORIES): continue
-                    title = clean_text(entry.get("title", ""))
-                    summary = clean_text(entry.get("summary", entry.get("description", "")))
-                    dt = parse_entry_date(entry)
-                    img = extract_image_url(entry)
-                    cat = detect_category(title, summary, feed["name"])
-                    
-                    articles.append({
-                        "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
-                        "title": title,
-                        "link": link,
-                        "source": feed["name"],
-                        "summary": summary,
-                        "date": dt,
-                        "relative_date": format_relative_date(dt),
-                        "category": cat,
-                        "image_url": img if img else f"https://picsum.photos/seed/{abs(hash(title)) % 1000}/600/350",
-                        "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
-                    })
-        except:
+  articles = []
+  headers = {
+      "User-Agent": (
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      )
+  }
+  for feed in SOURCES:
+    try:
+      resp = requests.get(feed["url"], headers=headers, timeout=4)
+      if resp.status_code == 200:
+        parsed = feedparser.parse(resp.content)
+        for entry in parsed.entries[:4]:
+          link = entry.get("link", "#")
+          if any(bad in link.lower() for bad in EXCLUDED_CATEGORIES):
             continue
-    articles.sort(key=lambda x: x["date"], reverse=True)
-    return articles
+          title = clean_text(entry.get("title", ""))
+          summary = clean_text(
+              entry.get("summary", entry.get("description", ""))
+          )
+          dt = parse_entry_date(entry)
+          img = extract_image_url(entry)
+          cat = detect_category(title, summary, feed["name"])
+
+          articles.append({
+              "id": hashlib.md5((link + title).encode("utf-8")).hexdigest(),
+              "title": title,
+              "link": link,
+              "source": feed["name"],
+              "summary": summary,
+              "date": dt,
+              "relative_date": format_relative_date(dt),
+              "category": cat,
+              "image_url": (
+                  img
+                  if img
+                  else (
+                      f"https://picsum.photos/seed/{abs(hash(title)) % 1000}/600/350"
+                  )
+              ),
+              "summary_short": (
+                  summary[:160] + "..." if len(summary) > 160 else summary
+              ),
+          })
+    except:
+      continue
+  articles.sort(key=lambda x: x["date"], reverse=True)
+  return articles
+
 
 with st.spinner("Chargement de l'actualité Krea..."):
-    all_fetched = fetch_all_feeds()
+  all_fetched = fetch_all_feeds()
 
 # Cache offline local storage (Favoris & Articles lus persistants)
-fav_articles_data = [a for a in all_fetched if a["link"] in st.session_state.bookmarks]
+fav_articles_data = [
+    a for a in all_fetched if a["link"] in st.session_state.bookmarks
+]
 read_articles_list = list(st.session_state.read_articles)
 fav_json_str = json.dumps(json.dumps(fav_articles_data, default=str))
 read_json_str = json.dumps(json.dumps(read_articles_list))
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <script>
     try {{
         localStorage.setItem('krea_offline_favorites', {fav_json_str});
         localStorage.setItem('krea_read_articles', {read_json_str});
     }} catch(e) {{}}
 </script>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
-selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
+categories = [
+    "Tous",
+    "Photoshop",
+    "Lightroom",
+    "InDesign",
+    "Illustrator",
+    "AI",
+    "Graphisme",
+    "Photo",
+    "Tutoriels",
+    "Expos photos",
+    "☆ Favoris",
+]
+selected_category = st.radio(
+    "Filtrer par catégorie :", categories, horizontal=True
+)
 
 col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
 with col_source:
-    source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
-    selected_source = st.selectbox("Source :", source_options)
+  source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
+  selected_source = st.selectbox("Source :", source_options)
 with col_search:
-    search_query = st.text_input("⌕ Mot-clé :", value=st.session_state.search_input, placeholder="ex: midjourney, portrait...")
+  search_query = st.text_input(
+      "⌕ Mot-clé :",
+      value=st.session_state.search_input,
+      placeholder="ex: midjourney, portrait...",
+  )
 with col_view:
-    st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
-    view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
+  st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
+  view_mode = st.radio(
+      "Affichage :", ["Grille", "Liste compacte"], horizontal=True
+  )
 with col_refresh:
-    st.write("")
-    st.write("")
-    if st.button("↻ Actualiser", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
+  st.write("")
+  st.write("")
+  if st.button("↻ Actualiser", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
 
 st.write("✦ **Tendances du moment :**")
-tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
+
+# Génération dynamique des tendances basée sur les articles récupérés
+all_text = " ".join(
+    [f"{art['title']} {art['summary']}" for art in all_fetched]
+).lower()
+extracted_tags = []
+for cat, kws in KEYWORDS.items():
+  for kw in kws:
+    if re.search(r"\b" + re.escape(kw) + r"\b", all_text):
+      extracted_tags.append(kw.capitalize())
+
+tag_counts = Counter(extracted_tags)
+dynamic_tags = [tag for tag, count in tag_counts.most_common(6)]
+
+fallback_pool = [
+    "Photoshop",
+    "Lightroom",
+    "AI",
+    "Graphisme",
+    "Photo",
+    "Tutoriel",
+    "Midjourney",
+    "Illustrator",
+]
+for tag in fallback_pool:
+  if len(dynamic_tags) < 6 and tag not in dynamic_tags:
+    dynamic_tags.append(tag)
+dynamic_tags = dynamic_tags[:6]
 
 # 1 seule ligne de 6 colonnes en Python, transformée dynamiquement en 2 lignes de 3 sur mobile via CSS
 tag_cols = st.columns(6)
-for idx, tag in enumerate(tags):
-    with tag_cols[idx]:
-        if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
-            st.session_state.search_input = tag
-            st.rerun()
+for idx, tag in enumerate(dynamic_tags):
+  with tag_cols[idx]:
+    if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
+      st.session_state.search_input = tag
+      st.rerun()
 
 st.divider()
 
 filtered_articles = []
 for art in all_fetched:
-    text_to_check = f"{art['title']} {art['summary']}".lower()
-    if selected_category == "☆ Favoris":
-        if art["link"] not in st.session_state.bookmarks: continue
-        cat_match = True
-    elif selected_category == "Tous":
-        cat_match = True
-    else:
-        kw_list = KEYWORDS.get(selected_category, [])
-        cat_match = any(re.search(r'\b' + re.escape(kw) + r'\b', text_to_check) for kw in kw_list)
+  text_to_check = f"{art['title']} {art['summary']}".lower()
+  if selected_category == "☆ Favoris":
+    if art["link"] not in st.session_state.bookmarks:
+      continue
+    cat_match = True
+  elif selected_category == "Tous":
+    cat_match = True
+  else:
+    kw_list = KEYWORDS.get(selected_category, [])
+    cat_match = any(
+        re.search(r"\b" + re.escape(kw) + r"\b", text_to_check) for kw in kw_list
+    )
 
-    source_match = True if selected_source == "Toutes les sources" else (art["source"] == selected_source)
-    search_match = True if not search_query.strip() else (search_query.lower().strip() in text_to_check)
+  source_match = (
+      True
+      if selected_source == "Toutes les sources"
+      else (art["source"] == selected_source)
+  )
+  search_match = (
+      True
+      if not search_query.strip()
+      else (search_query.lower().strip() in text_to_check)
+  )
 
-    if cat_match and source_match and search_match:
-        filtered_articles.append(art)
+  if cat_match and source_match and search_match:
+    filtered_articles.append(art)
 
-if selected_category == "Tous" and not search_query.strip() and st.session_state.category_views:
-    filtered_articles.sort(key=lambda x: (st.session_state.category_views.get(x["category"], 0), x["date"]), reverse=True)
+if (
+    selected_category == "Tous"
+    and not search_query.strip()
+    and st.session_state.category_views
+):
+  filtered_articles.sort(
+      key=lambda x: (
+          st.session_state.category_views.get(x["category"], 0),
+          x["date"],
+      ),
+      reverse=True,
+  )
 
 if selected_category == "☆ Favoris" and filtered_articles:
-    st.subheader(f"☆ Vos favoris ({len(filtered_articles)})")
+  st.subheader(f"☆ Vos favoris ({len(filtered_articles)})")
 
 if filtered_articles:
-    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "Grille")
-    start_idx = 0
-    if show_hero and len(filtered_articles) > 0:
-        hero = filtered_articles[0]
-        start_idx = 1
-        cat_color = CATEGORY_COLORS.get(hero['category'], "#64748B")
-        is_hero_read = hero['id'] in st.session_state.read_articles
-        
+  show_hero = (
+      selected_category == "Tous"
+      and selected_source == "Toutes les sources"
+      and not search_query.strip()
+      and view_mode == "Grille"
+  )
+  start_idx = 0
+  if show_hero and len(filtered_articles) > 0:
+    hero = filtered_articles[0]
+    start_idx = 1
+    cat_color = CATEGORY_COLORS.get(hero["category"], "#64748B")
+    is_hero_read = hero["id"] in st.session_state.read_articles
+
+    with st.container(border=True):
+      st.markdown(
+          f'<div class="{"article-read" if is_hero_read else ""}">',
+          unsafe_allow_html=True,
+      )
+      st.markdown(
+          '<span class="hero-badge">✦ À LA UNE</span>', unsafe_allow_html=True
+      )
+      if is_hero_read:
+        st.markdown('<span class="read-badge">✓ Lu</span>', unsafe_allow_html=True)
+
+      c_img, c_txt = st.columns([1.2, 1])
+      with c_img:
+        st.markdown(
+            f'<img src="{hero["image_url"]}" style="width:100%; height:260px;'
+            ' object-fit:cover; border-radius:12px;">',
+            unsafe_allow_html=True,
+        )
+      with c_txt:
+        st.markdown(
+            f'<span class="cat-badge"'
+            f' style="background-color:{cat_color};">{hero["category"]}</span>',
+            unsafe_allow_html=True,
+        )
+        st.caption(f"⌖ **{hero['source']}** • {hero['relative_date']}")
+        st.markdown(f"### {hero['title']}")
+        st.write(hero["summary"][:200] + "...")
+
+        c1, c2, c3 = st.columns([1.5, 1, 1])
+        with c1:
+          st.link_button(
+              "Lire", hero["link"], use_container_width=True
+          )
+        with c2:
+          if st.button(
+              "Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True
+          ):
+            open_preview_modal(hero)
+        with c3:
+          is_fav = hero["link"] in st.session_state.bookmarks
+          if st.button(
+              "☆ Retirer" if is_fav else "☆ Favori",
+              key=f"fav_hero_{hero['id']}",
+              use_container_width=True,
+          ):
+            if is_fav:
+              st.session_state.bookmarks.remove(hero["link"])
+            else:
+              st.session_state.bookmarks.add(hero["link"])
+            st.rerun()
+      st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
+  grid_articles = filtered_articles[start_idx:]
+  visible_articles = grid_articles[: st.session_state.articles_limit]
+
+  if view_mode == "Grille":
+    cols = st.columns(3)
+    for idx, article in enumerate(visible_articles):
+      col = cols[idx % 3]
+      cat_color = CATEGORY_COLORS.get(article["category"], "#64748B")
+      is_read = article["id"] in st.session_state.read_articles
+
+      with col:
         with st.container(border=True):
-            st.markdown(f'<div class="{"article-read" if is_hero_read else ""}">', unsafe_allow_html=True)
-            st.markdown('<span class="hero-badge">✦ À LA UNE</span>', unsafe_allow_html=True)
-            if is_hero_read: st.markdown('<span class="read-badge">✓ Lu</span>', unsafe_allow_html=True)
-            
-            c_img, c_txt = st.columns([1.2, 1])
-            with c_img: st.markdown(f'<img src="{hero["image_url"]}" style="width:100%; height:260px; object-fit:cover; border-radius:12px;">', unsafe_allow_html=True)
-            with c_txt:
-                st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{hero["category"]}</span>', unsafe_allow_html=True)
-                st.caption(f"⌖ **{hero['source']}** • {hero['relative_date']}")
-                st.markdown(f"### {hero['title']}")
-                st.write(hero['summary'][:200] + "...")
-                
-                c1, c2, c3 = st.columns([1.5, 1, 1])
-                with c1: st.link_button("Lire", hero['link'], use_container_width=True)
-                with c2:
-                    if st.button("Aperçu", key=f"prev_hero_{hero['id']}", use_container_width=True): open_preview_modal(hero)
-                with c3:
-                    is_fav = hero['link'] in st.session_state.bookmarks
-                    if st.button("☆ Retirer" if is_fav else "☆ Favori", key=f"fav_hero_{hero['id']}", use_container_width=True):
-                        if is_fav: st.session_state.bookmarks.remove(hero['link'])
-                        else: st.session_state.bookmarks.add(hero['link'])
-                        st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+          st.markdown(
+              f'<div class="{"article-read" if is_read else ""}">',
+              unsafe_allow_html=True,
+          )
+          st.markdown(
+              f'<img src="{article["image_url"]}" style="width:100%;'
+              " height:160px; object-fit:cover; border-radius:10px;"
+              ' margin-bottom:8px;">',
+              unsafe_allow_html=True,
+          )
+          st.markdown(
+              f'<span class="cat-badge"'
+              f' style="background-color:{cat_color};">{article["category"]}</span>'
+              + ("<span class='read-badge'>✓ Lu</span>" if is_read else ""),
+              unsafe_allow_html=True,
+          )
+          st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
+          st.markdown(f"**{article['title']}**")
+          st.write(article["summary_short"])
 
-    grid_articles = filtered_articles[start_idx:]
-    visible_articles = grid_articles[:st.session_state.articles_limit]
-    
-    if view_mode == "Grille":
-        cols = st.columns(3)
-        for idx, article in enumerate(visible_articles):
-            col = cols[idx % 3]
-            cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
-            is_read = article['id'] in st.session_state.read_articles
-            
-            with col:
-                with st.container(border=True):
-                    st.markdown(f'<div class="{"article-read" if is_read else ""}">', unsafe_allow_html=True)
-                    st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:8px;">', unsafe_allow_html=True)
-                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else ''), unsafe_allow_html=True)
-                    st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
-                    st.markdown(f"**{article['title']}**")
-                    st.write(article['summary_short'])
-                    
-                    c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
-                    with c_read: st.link_button("Lire", article['link'], use_container_width=True)
-                    with c_prev:
-                        if st.button("Aperçu", key=f"prev_{article['id']}", use_container_width=True): open_preview_modal(article)
-                    with c_fav:
-                        is_fav = article['link'] in st.session_state.bookmarks
-                        if st.button("★" if is_fav else "☆", key=f"fav_{article['id']}", use_container_width=True):
-                            if is_fav: st.session_state.bookmarks.remove(article['link'])
-                            else: st.session_state.bookmarks.add(article['link'])
-                            st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        for article in visible_articles:
-            cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
-            is_read = article['id'] in st.session_state.read_articles
-            
-            with st.container(border=True):
-                st.markdown(f'<div class="{"article-read" if is_read else ""}">', unsafe_allow_html=True)
-                c_img, c_content = st.columns([0.8, 3.2])
-                with c_img: st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">', unsafe_allow_html=True)
-                with c_content:
-                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else ''), unsafe_allow_html=True)
-                    st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
-                    st.markdown(f"**{article['title']}**")
-                    st.write(article['summary_short'])
-                    
-                    c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
-                    with c_read: st.link_button("Lire", article['link'], use_container_width=True)
-                    with c_prev:
-                        if st.button("Aperçu", key=f"prev_l_{article['id']}", use_container_width=True): open_preview_modal(article)
-                    with c_fav:
-                        is_fav = article['link'] in st.session_state.bookmarks
-                        if st.button("★ Retirer" if is_fav else "☆ Favori", key=f"fav_l_{article['id']}", use_container_width=True):
-                            if is_fav: st.session_state.bookmarks.remove(article['link'])
-                            else: st.session_state.bookmarks.add(article['link'])
-                            st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+          c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
+          with c_read:
+            st.link_button(
+                "Lire", article["link"], use_container_width=True
+            )
+          with c_prev:
+            if st.button(
+                "Aperçu", key=f"prev_{article['id']}", use_container_width=True
+            ):
+              open_preview_modal(article)
+          with c_fav:
+            is_fav = article["link"] in st.session_state.bookmarks
+            if st.button(
+                "★" if is_fav else "☆",
+                key=f"fav_{article['id']}",
+                use_container_width=True,
+            ):
+              if is_fav:
+                st.session_state.bookmarks.remove(article["link"])
+              else:
+                st.session_state.bookmarks.add(article["link"])
+              st.rerun()
+          st.markdown("</div>", unsafe_allow_html=True)
+  else:
+    for article in visible_articles:
+      cat_color = CATEGORY_COLORS.get(article["category"], "#64748B")
+      is_read = article["id"] in st.session_state.read_articles
 
-    if len(filtered_articles) > st.session_state.articles_limit:
-        st.markdown("<br>", unsafe_allow_html=True)
-        _, col_m, _ = st.columns([1, 1, 1])
-        with col_m:
-            if st.button("⤓ Charger plus d'articles", use_container_width=True):
-                st.session_state.articles_limit += 12
-                st.rerun()
+      with st.container(border=True):
+        st.markdown(
+            f'<div class="{"article-read" if is_read else ""}">',
+            unsafe_allow_html=True,
+        )
+        c_img, c_content = st.columns([0.8, 3.2])
+        with c_img:
+          st.markdown(
+              f'<img src="{article["image_url"]}" style="width:100%;'
+              ' height:100px; object-fit:cover; border-radius:8px;">',
+              unsafe_allow_html=True,
+          )
+        with c_content:
+          st.markdown(
+              f'<span class="cat-badge"'
+              f' style="background-color:{cat_color};">{article["category"]}</span>'
+              + ("<span class='read-badge'>✓ Lu</span>" if is_read else ""),
+              unsafe_allow_html=True,
+          )
+          st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
+          st.markdown(f"**{article['title']}**")
+          st.write(article["summary_short"])
+
+          c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
+          with c_read:
+            st.link_button(
+                "Lire", article["link"], use_container_width=True
+            )
+          with c_prev:
+            if st.button(
+                "Aperçu",
+                key=f"prev_l_{article['id']}",
+                use_container_width=True,
+            ):
+              open_preview_modal(article)
+          with c_fav:
+            is_fav = article["link"] in st.session_state.bookmarks
+            if st.button(
+                "★ Retirer" if is_fav else "☆ Favori",
+                key=f"fav_l_{article['id']}",
+                use_container_width=True,
+            ):
+              if is_fav:
+                st.session_state.bookmarks.remove(article["link"])
+              else:
+                st.session_state.bookmarks.add(article["link"])
+              st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+  if len(filtered_articles) > st.session_state.articles_limit:
+    st.markdown("<br>", unsafe_allow_html=True)
+    _, col_m, _ = st.columns([1, 1, 1])
+    with col_m:
+      if st.button("⤓ Charger plus d'articles", use_container_width=True):
+        st.session_state.articles_limit += 12
+        st.rerun()
 else:
-    st.info("Aucun article trouvé pour ces critères.")
+  st.info("Aucun article trouvé pour ces critères.")
 
-st.markdown("""
+st.markdown(
+    """
 <div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
     <a href="#top" style="color: #A855F7; text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-block; margin-bottom: 20px;">↑ Retour en haut</a>
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
@@ -606,4 +900,6 @@ st.markdown("""
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
