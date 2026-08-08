@@ -250,6 +250,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "Le Monde Informatique - Adobe", "url": "https://www.lemondeinformatique.fr/rss/marque/adobe-68.xml"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
@@ -278,7 +279,6 @@ KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement photo"],
     "Adobe": ["adobe", "creative cloud", "indesign", "illustrator", "acrobat", "premiere", "after effects", "xd", "lightroom", "photoshop"],
-    "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
     "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
     "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage"],
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte"],
@@ -286,7 +286,6 @@ KEYWORDS = {
     "AI": ["ia", "intelligence artificielle", "midjourney", "firefly", "chatgpt", "dall-e", "stable diffusion"]
 }
 
-# Retrait explicite d'Illustrator et InDesign des clés de catégories pour fusionner dans Adobe
 if "Illustrator" in KEYWORDS:
     del KEYWORDS["Illustrator"]
 if "InDesign" in KEYWORDS:
@@ -648,6 +647,6 @@ st.markdown("""
           <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
-    <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
+    <p style="color: #A8A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
 </div>
 """, unsafe_allow_html=True)
