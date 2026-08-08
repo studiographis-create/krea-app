@@ -9,15 +9,11 @@ from datetime import datetime, timezone
 import time
 import base64
 
-# --- CONFIGURATION LOGO & FAVICON ---
+# --- CONFIGURATION LOGO SVG HD ---
 KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#2563EB"/>
-    </linearGradient>
-    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.6"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0.3"/>
-    </linearGradient>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#2563EB"/></linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#06B6D4" stop-opacity="0.6"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0.3"/></linearGradient>
   </defs>
   <rect x="0" y="0" width="100" height="100" rx="22" fill="#0b0f19"/>
   <rect x="18" y="18" width="62" height="62" rx="14" fill="url(#g2)" transform="rotate(-6 49 49)"/>
@@ -31,6 +27,7 @@ svg_data_uri = f"data:image/svg+xml;base64,{krea_b64_svg}"
 
 st.set_page_config(page_title="Krea — L'Actu Créative & IA", page_icon="🎨", layout="wide")
 
+# Injection Favicon & Styles propres
 st.markdown(f"""
 <script>
 (function() {{
@@ -49,21 +46,23 @@ st.markdown(f"""
         background-image: radial-gradient(at 15% 10%, rgba(139, 92, 246, 0.22) 0px, transparent 40%),
                           radial-gradient(at 85% 5%, rgba(37, 99, 235, 0.20) 0px, transparent 45%);
         color: #f1f5f9;
-    }}
+    }
     div[data-testid="stVerticalBlockBorderWrapper"] {{
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
         padding: 14px !important;
-        transition: transform 0.25s ease;
-    }}
+        transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+    }
     div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
         transform: translateY(-4px) !important;
         border-color: #8b5cf6 !important;
-    }}
+        box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2) !important;
+    }
     .article-read {{ opacity: 0.65; filter: grayscale(15%); }}
     .cat-badge {{ font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }}
     .read-badge {{ font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }}
+    .hero-badge {{ background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,6 +80,7 @@ def show_install_instructions():
     - Appuyez sur les **trois points** (⋮) puis **"Installer l'application"**.
     """)
 
+# --- ETAT DE SESSION ---
 if "bookmarks" not in st.session_state: st.session_state.bookmarks = set()
 if "read_articles" not in st.session_state: st.session_state.read_articles = set()
 if "category_views" not in st.session_state: st.session_state.category_views = {}
@@ -202,27 +202,54 @@ def fetch_all_feeds():
 
 all_fetched = fetch_all_feeds()
 
-col_logo, col_inst = st.columns([5, 1])
+# --- EN-TÊTE AVEC LOGO SVG D'ORIGINE ---
+col_logo, col_inst = st.columns([6, 1])
 with col_logo:
-    st.markdown("## 🎨 Krea — L'Actu Créative & IA")
+    st.markdown("""
+    <div style="margin-top: 0px; margin-bottom: 10px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="420" style="max-width: 100%; height: auto;">
+          <defs>
+            <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6" /><stop offset="100%" stop-color="#2563EB" />
+            </linearGradient>
+            <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
+          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
+          <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
+            <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
+            <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
+          </g>
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
+          <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
+        </svg>
+    </div>
+    """, unsafe_allow_html=True)
+
 with col_inst:
     st.write("")
-    if st.button("⤓ Installer App", use_container_width=True):
+    if st.button("⤓ Installer", use_container_width=True):
         show_install_instructions()
 
+st.markdown("<br>", unsafe_allow_html=True)
+
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
-selected_category = st.radio("Catégories :", categories, horizontal=True)
+selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 col_s, col_r, col_v, col_ref = st.columns([1.5, 2, 1, 0.6])
 with col_s: selected_source = st.selectbox("Source :", ["Toutes les sources"] + [s["name"] for s in SOURCES])
 with col_r: search_query = st.text_input("⌕ Recherche :", value=st.session_state.search_input, placeholder="Mot-clé...")
-with col_v: view_mode = st.radio("Vue :", ["Grille", "Liste"], horizontal=True)
+with col_v: view_mode = st.radio("Affichage :", ["Grille", "Liste"], horizontal=True)
 with col_ref:
     st.write("")
     if st.button("↻", use_container_width=True): st.cache_data.clear(); st.rerun()
 
 st.divider()
 
+# --- FILTRAGE ---
 filtered = []
 for art in all_fetched:
     txt = f"{art['title']} {art['summary']}".lower()
@@ -232,6 +259,7 @@ for art in all_fetched:
     if search_query.strip() and search_query.lower() not in txt: continue
     filtered.append(art)
 
+# --- AFFICHAGE ---
 if filtered:
     cols = st.columns(3) if view_mode == "Grille" else [st.container()]
     for idx, art in enumerate(filtered[:st.session_state.articles_limit]):
@@ -243,7 +271,7 @@ if filtered:
             with st.container(border=True):
                 st.markdown(f'<div class="{"article-read" if is_read else ""}">', unsafe_allow_html=True)
                 if view_mode == "Grille":
-                    st.markdown(f'<img src="{art["image_url"]}" style="width:100%; height:140px; object-fit:cover; border-radius:8px; margin-bottom:8px;">', unsafe_allow_html=True)
+                    st.markdown(f'<img src="{art["image_url"]}" style="width:100%; height:150px; object-fit:cover; border-radius:8px; margin-bottom:8px;">', unsafe_allow_html=True)
                 
                 cat_col = CATEGORY_COLORS.get(art['category'], "#64748B")
                 st.markdown(f'<span class="cat-badge" style="background-color:{cat_col};">{art["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else ''), unsafe_allow_html=True)
@@ -267,11 +295,29 @@ if filtered:
             st.session_state.articles_limit += 12
             st.rerun()
 else:
-    st.info("Aucun article trouvé.")
+    st.info("Aucun article trouvé pour ces critères.")
 
+# --- FOOTER ---
 st.markdown("""
-<div style="text-align: center; margin-top: 50px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.08);">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="45" height="45"><rect x="15" y="12" width="76" height="76" rx="18" fill="#8B5CF6"/><text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text></svg>
-    <p style="color: #94A3B8; font-size: 0.8rem; margin-top: 5px;">Krea — by Graphis Studio</p>
+<div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="55" height="55" style="filter: drop-shadow(0px 4px 12px rgba(139, 92, 246, 0.3));">
+          <defs>
+            <linearGradient id="kreaGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6" />
+              <stop offset="100%" stop-color="#2563EB" />
+            </linearGradient>
+            <linearGradient id="layerGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
+          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
+          <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+        </svg>
+    </div>
+    <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
 </div>
 """, unsafe_allow_html=True)
