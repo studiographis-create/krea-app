@@ -394,9 +394,9 @@ with col_inst:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Sources RSS
+# Sources RSS (propre)
 SOURCES = [
-    {"name": "J'ai un pote dans la com (Photoshop)", "url": "https://jai-un-pote-dans-la.com/tag/photoshop/feed/"},
+    {"name": "Siècle Digital (Photoshop)", "url": "https://siecledigital.fr/tag/photoshop/feed/"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
