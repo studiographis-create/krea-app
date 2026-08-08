@@ -338,7 +338,6 @@ def fetch_all_feeds():
             resp = requests.get(feed["url"], headers=headers, timeout=4)
             if resp.status_code == 200:
                 parsed = feedparser.parse(resp.content)
-                # SÉCURITÉ MÉMOIRE : Limité à 4 articles par source pour éviter les plantages RAM du navigateur
                 for entry in parsed.entries[:4]:
                     link = entry.get("link", "#")
                     if any(bad in link.lower() for bad in EXCLUDED_CATEGORIES): continue
@@ -367,11 +366,15 @@ def fetch_all_feeds():
 
 all_fetched = fetch_all_feeds()
 
-# Cache offline local storage
+# Cache offline local storage (Favoris & Articles lus persistants)
 fav_articles_data = [a for a in all_fetched if a["link"] in st.session_state.bookmarks]
+read_articles_list = list(st.session_state.read_articles)
 st.markdown(f"""
 <script>
-    try {{ localStorage.setItem('krea_offline_favorites', {json.dumps(json.dumps(fav_articles_data, default=str))}); }} catch(e) {{}}
+    try {{
+        localStorage.setItem('krea_offline_favorites', {json.dumps(json.dumps(fav_articles_data, default=str))});
+        localStorage.setItem('krea_read_articles', {json.dumps(json.dumps(read_articles_list))});
+    }} catch(e) {{}}
 </script>
 """, unsafe_allow_html=True)
 
