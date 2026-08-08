@@ -154,15 +154,16 @@ st.markdown("""
         box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
     }
 
-    /* Style corrigé et renforcé du spinner de chargement en mode sombre */
-    div[data-testid="stSpinner"], div[data-testid="stSpinner"] > div {
+    /* Forçage absolu du fond sombre et du texte clair pour le chargement (spinner) */
+    div[data-testid="stSpinner"], .stSpinner {
         background-color: #161e2e !important;
+        color: #f1f5f9 !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 14px !important;
         padding: 16px !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
     }
-    div[data-testid="stSpinner"] p, div[data-testid="stSpinner"] span, div[data-testid="stSpinner"] div {
+    div[data-testid="stSpinner"] *, .stSpinner * {
         color: #f1f5f9 !important;
         background-color: transparent !important;
         font-weight: 600 !important;
@@ -371,7 +372,7 @@ def open_preview_modal(article):
     with c2: st.link_button("✉ WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
     with c3: st.link_button("↗ 𝕏", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
 
-@st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
+@st.cache_data(ttl=1800, show_spinner=False)
 def fetch_all_feeds():
     articles = []
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -406,7 +407,8 @@ def fetch_all_feeds():
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
-all_fetched = fetch_all_feeds()
+with st.spinner("Chargement de l'actualité Krea..."):
+    all_fetched = fetch_all_feeds()
 
 # Cache offline local storage (Favoris & Articles lus persistants)
 fav_articles_data = [a for a in all_fetched if a["link"] in st.session_state.bookmarks]
