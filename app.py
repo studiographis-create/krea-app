@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import feedparser
 import re
 import requests
@@ -296,12 +297,14 @@ if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = set()
 if "read_articles" not in st.session_state:
     st.session_state.read_articles = set()
+if "category_views" not in st.session_state:
+    st.session_state.category_views = {}
 if "articles_limit" not in st.session_state:
     st.session_state.articles_limit = 12
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# En-tête : Logo SVG Krea (étoile rose conservée) + Bouton Installation
+# En-tête : Logo SVG Krea (étoile rose) + Bouton Installation
 col_logo, col_inst = st.columns([6, 1])
 with col_logo:
     st.markdown("""
@@ -503,6 +506,11 @@ def get_unique_fallback(title):
 @st.dialog("▤ Aperçu de l'article")
 def open_preview_modal(article):
     st.session_state.read_articles.add(article["id"])
+    
+    # Suivi des recommandations contextuelles
+    cat = article.get("category", "Général")
+    st.session_state.category_views[cat] = st.session_state.category_views.get(cat, 0) + 1
+
     if article.get("image_url"):
         st.markdown(
             f'<img src="{article["image_url"]}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin-bottom:12px;">', 
@@ -510,6 +518,43 @@ def open_preview_modal(article):
         )
     st.markdown(f"### {article['title']}")
     st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
+    
+    # Lecteur audio native Web Speech API (Text-to-Speech)
+    speech_text = json.dumps(f"{article['title']}. {article['summary']}")
+    tts_html = f"""
+    <div style="margin: 10px 0 16px 0;">
+        <button id="tts-btn" onclick="
+            if (window.speechSynthesis.speaking) {{
+                window.speechSynthesis.cancel();
+                this.innerHTML = '☊ Écouter le résumé';
+            }} else {{
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance({speech_text});
+                msg.lang = 'fr-FR';
+                msg.onend = () => {{ document.getElementById('tts-btn').innerHTML = '☊ Écouter le résumé'; }};
+                window.speechSynthesis.speak(msg);
+                this.innerHTML = '⏹ Arrêter l\\'écoute';
+            }}
+        " style="
+            background-color: rgba(30, 41, 59, 0.85);
+            color: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        ">
+            ☊ Écouter le résumé
+        </button>
+    </div>
+    """
+    components.html(tts_html, height=45)
+
     st.write(article['summary'])
     st.divider()
     
@@ -568,6 +613,19 @@ def fetch_all_feeds():
     return articles
 
 all_fetched = fetch_all_feeds()
+
+# Mise en cache offline des favoris dans le localStorage du navigateur
+fav_articles_data = [a for a in all_fetched if a["link"] in st.session_state.bookmarks]
+favs_json_str = json.dumps(fav_articles_data, default=str)
+offline_cache_script = f"""
+<script>
+    try {{
+        localStorage.setItem('krea_offline_favorites', {json.dumps(favs_json_str)});
+    }} catch(e) {{}}
+</script>
+"""
+st.markdown(offline_cache_script, unsafe_allow_html=True)
+
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
@@ -622,6 +680,13 @@ for art in all_fetched:
         art_copy = art.copy()
         art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
         filtered_articles.append(art_copy)
+
+# Recommandations contextuelles : tri dynamique selon les centres d'intérêt récents
+if selected_category == "Tous" and not search_query.strip() and st.session_state.category_views:
+    filtered_articles.sort(
+        key=lambda x: (st.session_state.category_views.get(x["category"], 0), x["date"]), 
+        reverse=True
+    )
 
 if selected_category == "☆ Favoris" and filtered_articles:
     col_fav_title, col_fav_json, col_fav_md = st.columns([2, 1, 1])
@@ -753,7 +818,7 @@ elif selected_category == "☆ Favoris":
 else:
     st.info("Aucun article trouvé pour ces critères.")
 
-# Footer centré avec grand k incliné et étoile rose conservée
+# Footer centré avec grand k incliné et étoile rose
 st.markdown("""
 <div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
