@@ -272,7 +272,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Dialog pour installer l'application
-@st.dialog("📲 Installer Krea sur votre appareil")
+@st.dialog("⤓ Installer Krea sur votre appareil")
 def show_install_instructions():
     st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
     st.markdown("""
@@ -301,7 +301,7 @@ if "articles_limit" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# En-tête : Logo SVG Krea + Bouton Installation
+# En-tête : Logo SVG Krea (étoile rose conservée) + Bouton Installation
 col_logo, col_inst = st.columns([6, 1])
 with col_logo:
     st.markdown("""
@@ -332,7 +332,7 @@ with col_logo:
 
 with col_inst:
     st.write("")
-    if st.button("📲 Installer l'app"):
+    if st.button("⤓ Installer l'app"):
         show_install_instructions()
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -523,7 +523,7 @@ def open_preview_modal(article):
     with col_open:
         st.link_button("↗ Ouvrir le site d'origine", article['link'], use_container_width=True)
     with col_wa:
-        st.link_button("💬 WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
+        st.link_button("✉ WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
     with col_x:
         st.link_button("↗ Share 𝕏", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
 
