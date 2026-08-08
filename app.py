@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import feedparser
 import re
 import requests
@@ -13,10 +14,10 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # ---------------------------------------------------------
-# Génération dynamique de l'icône PNG HD (512x512) du Logo Krea pour Safari/Apple & PWA
+# Génération dynamique de l'icône PNG HD (512x512) Krea
 # ---------------------------------------------------------
 @st.cache_data
-def generate_krea_icon_png():
+def generate_krea_pil_image():
     size = 512
     bg = Image.new("RGBA", (size, size), (11, 15, 25, 255)) # Fond #0b0f19
     s = size / 110.0
@@ -75,101 +76,94 @@ def generate_krea_icon_png():
     star_draw.polygon(star_pts, fill=(244, 114, 182, 255))
     bg.paste(star_img, (0, 0), star_img)
 
-    buffer = io.BytesIO()
-    bg.save(buffer, format="PNG")
-    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return bg
 
-# Génération du Data URI PNG
-png_icon_uri = generate_krea_icon_png()
+# Création de l'image PIL
+krea_pil_img = generate_krea_pil_image()
 
-# Manifest Web App PWA
-manifest_data = {
-    "name": "Krea",
-    "short_name": "Krea",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#0b0f19",
-    "theme_color": "#0b0f19",
-    "icons": [
-        {
-            "src": png_icon_uri,
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ]
-}
-manifest_data_uri = "data:application/manifest+json," + urllib.parse.quote(json.dumps(manifest_data))
+# Création de la chaîne Data URI PNG pour le JavaScript Safari
+buffer = io.BytesIO()
+krea_pil_img.save(buffer, format="PNG")
+png_data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-# Configuration de la page Streamlit
+# Configuration de la page Streamlit avec l'image PIL directe
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
-    page_icon=png_icon_uri,
+    page_icon=krea_pil_img,
     layout="wide"
 )
 
-# Injection HTML & JavaScript pour imposer l'icône PNG et le nom Krea dans Safari Mac & iPhone
-pwa_header_html = f"""
-<meta name="referrer" content="no-referrer">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Krea">
-<meta name="application-name" content="Krea">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0b0f19">
-
-<link rel="icon" type="image/png" sizes="512x512" href="{png_icon_uri}">
-<link rel="shortcut icon" type="image/png" href="{png_icon_uri}">
-<link rel="apple-touch-icon" sizes="512x512" href="{png_icon_uri}">
-<link rel="apple-touch-icon-precomposed" sizes="512x512" href="{png_icon_uri}">
-<link rel="manifest" href="{manifest_data_uri}">
-
+# Injection JavaScript active via components.html pour verrouiller le Favicon et Apple Touch Icon
+components.html(f"""
 <script>
-    (function() {{
-        var pngUri = "{png_icon_uri}";
-        document.title = "Krea";
-        
-        function enforceAppleIcon() {{
-            var head = document.head || document.getElementsByTagName('head')[0];
+(function() {{
+    var pngUri = "{png_data_uri}";
+    
+    function lockKreaIcons() {{
+        try {{
+            var doc = window.parent.document;
+            if (!doc) return;
             
-            // Nettoyer les anciennes icônes Streamlit
-            var oldIcons = document.querySelectorAll("link[rel*='icon']");
-            oldIcons.forEach(function(el) {{
-                if (!el.getAttribute('href').startsWith('data:image/png')) {{
-                    el.parentNode.removeChild(el);
-                }}
+            // 1. Modifier le titre
+            doc.title = "Krea — L'Actu Créative & IA";
+            
+            // 2. Remplacer tous les favicons de l'onglet
+            var favicons = doc.querySelectorAll("link[rel*='icon']");
+            favicons.forEach(function(el) {{
+                el.href = pngUri;
+                el.type = "image/png";
             }});
             
-            // Forcer l'icône Apple Touch Icon
-            var appleIcon = document.querySelector("link[rel='apple-touch-icon']");
+            if (favicons.length === 0) {{
+                var newFav = doc.createElement('link');
+                newFav.rel = 'shortcut icon';
+                newFav.type = 'image/png';
+                newFav.href = pngUri;
+                doc.head.appendChild(newFav);
+            }}
+
+            // 3. Imposer l'Apple Touch Icon pour Safari Mac Dock & iPhone
+            var appleIcon = doc.querySelector("link[rel='apple-touch-icon']");
             if (!appleIcon) {{
-                appleIcon = document.createElement('link');
+                appleIcon = doc.createElement('link');
                 appleIcon.rel = 'apple-touch-icon';
                 appleIcon.sizes = '512x512';
                 appleIcon.href = pngUri;
-                head.appendChild(appleIcon);
+                doc.head.appendChild(appleIcon);
             }} else {{
                 appleIcon.href = pngUri;
             }}
-            
-            var appleIconPre = document.querySelector("link[rel='apple-touch-icon-precomposed']");
+
+            var appleIconPre = doc.querySelector("link[rel='apple-touch-icon-precomposed']");
             if (!appleIconPre) {{
-                appleIconPre = document.createElement('link');
+                appleIconPre = doc.createElement('link');
                 appleIconPre.rel = 'apple-touch-icon-precomposed';
                 appleIconPre.href = pngUri;
-                head.appendChild(appleIconPre);
+                doc.head.appendChild(appleIconPre);
             }} else {{
                 appleIconPre.href = pngUri;
             }}
+
+            // 4. Meta nom d'application pour Apple / Safari
+            var metaTitle = doc.querySelector("meta[name='apple-mobile-web-app-title']");
+            if (!metaTitle) {{
+                metaTitle = doc.createElement('meta');
+                metaTitle.name = 'apple-mobile-web-app-title';
+                metaTitle.content = 'Krea';
+                doc.head.appendChild(metaTitle);
+            }} else {{
+                metaTitle.content = 'Krea';
+            }}
+        }} catch(e) {{
+            console.log("Krea Icon Loader:", e);
         }}
-        
-        enforceAppleIcon();
-        setTimeout(enforceAppleIcon, 500);
-        setTimeout(enforceAppleIcon, 1500);
-    }})();
+    }}
+
+    lockKreaIcons();
+    setInterval(lockKreaIcons, 500);
+}})();
 </script>
-"""
-st.markdown(pwa_header_html, unsafe_allow_html=True)
+""", height=0, width=0)
 
 # Style CSS : Mesh gradient, Glassmorphism & Responsive
 st.markdown("""
