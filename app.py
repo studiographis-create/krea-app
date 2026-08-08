@@ -248,6 +248,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "Numerama Tech", "url": "https://www.numerama.com/tech/feed/"},
     {"name": "01net", "url": "https://www.01net.com/actualites/feed/"},
     {"name": "Photo Actus", "url": "https://www.photoactus.com/blog-feed.xml"},
     {"name": "L'Art de la Photo", "url": "https://lartdelaphoto.fr/feed/"},
