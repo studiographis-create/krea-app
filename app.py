@@ -331,6 +331,11 @@ def show_install_instructions():
     2. Faites défiler vers le bas et choisissez **"Sur l'écran d'accueil"**.
     3. Validez avec **"Ajouter"**.
 
+    **🖥️ Sur Mac (Safari)**:
+    1. Dans Safari, cliquez sur le menu **Fichier** en haut dans la barre des menus (ou le bouton de partage).
+    2. Choisissez **"Ajouter au Dock..."**.
+    3. Validez avec **"Ajouter"** pour l'avoir directement dans le Dock de votre Mac.
+
     **🤖 Sur Android (Chrome)**:
     1. Appuyez sur les **trois points** ⋮ dans le coin supérieur droit.
     2. Sélectionnez **"Installer l'application"** ou **"Ajouter à l'écran d'accueil"**.
