@@ -519,23 +519,11 @@ def open_preview_modal(article):
     st.markdown(f"### {article['title']}")
     st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
     
-    # Lecteur audio native Web Speech API (Text-to-Speech)
+    # Lecteur audio propre sans conflit d'échappement HTML
     speech_text = json.dumps(f"{article['title']}. {article['summary']}")
     tts_html = f"""
-    <div style="margin: 10px 0 16px 0;">
-        <button id="tts-btn" onclick="
-            if (window.speechSynthesis.speaking) {{
-                window.speechSynthesis.cancel();
-                this.innerHTML = '☊ Écouter le résumé';
-            }} else {{
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance({speech_text});
-                msg.lang = 'fr-FR';
-                msg.onend = () => {{ document.getElementById('tts-btn').innerHTML = '☊ Écouter le résumé'; }};
-                window.speechSynthesis.speak(msg);
-                this.innerHTML = '⏹ Arrêter l\\'écoute';
-            }}
-        " style="
+    <div style="font-family: system-ui, sans-serif; background: transparent; margin-bottom: 8px;">
+        <button id="tts-btn" style="
             background-color: rgba(30, 41, 59, 0.85);
             color: #f1f5f9;
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -552,8 +540,28 @@ def open_preview_modal(article):
             ☊ Écouter le résumé
         </button>
     </div>
+    <script>
+        const btn = document.getElementById('tts-btn');
+        const textToSpeak = {speech_text};
+        
+        btn.addEventListener('click', function() {{
+            if (window.speechSynthesis.speaking) {{
+                window.speechSynthesis.cancel();
+                btn.innerText = '☊ Écouter le résumé';
+            }} else {{
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance(textToSpeak);
+                msg.lang = 'fr-FR';
+                msg.onend = function() {{
+                    btn.innerText = '☊ Écouter le résumé';
+                }};
+                window.speechSynthesis.speak(msg);
+                btn.innerText = '⏹ Arrêter l’écoute';
+            }}
+        }});
+    </script>
     """
-    components.html(tts_html, height=45)
+    components.html(tts_html, height=48)
 
     st.write(article['summary'])
     st.divider()
@@ -818,7 +826,7 @@ elif selected_category == "☆ Favoris":
 else:
     st.info("Aucun article trouvé pour ces critères.")
 
-# Footer centré avec grand k incliné et étoile rose
+# Footer centré avec grand k incliné et étoile rose conservée
 st.markdown("""
 <div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
