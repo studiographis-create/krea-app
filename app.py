@@ -154,16 +154,17 @@ st.markdown("""
         box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
     }
 
-    /* Style du spinner de chargement en mode sombre */
-    div[data-testid="stSpinner"] {
-        background-color: rgba(22, 30, 46, 0.95) !important;
+    /* Style corrigé et renforcé du spinner de chargement en mode sombre */
+    div[data-testid="stSpinner"], div[data-testid="stSpinner"] > div {
+        background-color: #161e2e !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 14px !important;
         padding: 16px !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
     }
-    div[data-testid="stSpinner"] p, div[data-testid="stSpinner"] span {
+    div[data-testid="stSpinner"] p, div[data-testid="stSpinner"] span, div[data-testid="stSpinner"] div {
         color: #f1f5f9 !important;
+        background-color: transparent !important;
         font-weight: 600 !important;
     }
 
