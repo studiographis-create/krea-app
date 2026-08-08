@@ -21,7 +21,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SOURCES RSS (Réduites et stables pour tester) ---
+# --- SOURCES RSS ---
 SOURCES = [
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
@@ -50,8 +50,7 @@ def fetch_articles():
                         "source": feed["name"],
                         "summary": clean_text(entry.get("summary", ""))
                     })
-        except Exception as e:
-            # Enregistre ou ignore l'erreur d'un flux spécifique
+        except Exception:
             continue
             
     return articles
@@ -68,9 +67,9 @@ with col1:
 all_articles = fetch_articles()
 
 if not all_articles:
-    st.warning("⚠️ Aucun article n'a pu être récupéré. Cliquez sur le bouton 'Vider le cache & Actualiser' ci-dessus ou vérifiez si votre hébergeur bloque les requêtes sortantes vers ces flux RSS.")
+    st.warning("⚠️ Aucun article n'a pu être récupéré.")
 else:
-    st.success(f"✅ {len(articles if 'articles' in locals() else len(all_articles))} articles chargés avec succès !")
+    st.success(f"✅ {len(all_articles)} articles chargés avec succès !")
     cols = st.columns(3)
     for i, art in enumerate(all_articles):
         with cols[i % 3]:
