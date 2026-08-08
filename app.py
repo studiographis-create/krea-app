@@ -313,6 +313,12 @@ def extract_image_url(entry):
         for m in entry.media_thumbnail:
             u = clean_url(m.get('url'))
             if u: return u
+    for c in entry.get('content', []):
+        text_src = c.get('value', '')
+        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
+        for src in matches:
+            u = clean_url(src)
+            if u: return u
     for text_src in [entry.get('summary', ''), entry.get('description', '')]:
         matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
         for src in matches:
