@@ -275,7 +275,7 @@ SOURCES = [
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
-EXCLUDED_CATEGORIES = ["developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho"]
+EXCLUDED_CATEGORIES = ["developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", "automobile"]
 
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
