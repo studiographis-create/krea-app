@@ -19,7 +19,7 @@ st.set_page_config(
 st.markdown("""
 <meta name="referrer" content="no-referrer">
 <style>
-    /* Masquer le header Streamlit et le footer */
+    /* Masquer le header Streamlit et le footer par défaut */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -43,7 +43,7 @@ st.markdown("""
         color: #f1f5f9;
     }
     
-    /* Dynamic Loading Indicator / Status Widget / Spinner (Fond sombre absolu forcé sur PC et mobile) */
+    /* Dynamic Loading Indicator / Status Widget / Spinner (Fond sombre absolu) */
     div[data-testid="stStatusWidget"], 
     div[data-testid="stSpinner"], 
     div[data-testid="stNotification"],
@@ -171,28 +171,6 @@ st.markdown("""
             display: none !important;
         }
 
-        /* Aligner le bloc du Logo et le bouton d'installation sur la même ligne horizontale sur mobile */
-        div[data-testid="stHorizontalBlock"]:has(svg) {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 8px !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(1) {
-            flex: 3 !important;
-            width: auto !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) {
-            flex: 1 !important;
-            width: auto !important;
-            margin-top: 0 !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(svg) > div[data-testid="stColumn"]:nth-child(2) button {
-            font-size: 0.68rem !important;
-            padding: 4px 6px !important;
-            white-space: nowrap !important;
-        }
-
         /* FORCER 3 COLONNES SUR MOBILE POUR LES TENDANCES DU MOMENT */
         div.stApp div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) {
             display: flex !important;
@@ -273,65 +251,38 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Dialog pour installer l'application
-@st.dialog("📱 Installer Krea sur votre appareil")
-def show_install_instructions():
-    st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
-    st.markdown("""
-    **🍎 Sur iPhone / iPad (Safari)**:
-    1. Appuyez sur le bouton de **Partage** (carré avec une flèche vers le haut).
-    2. Faites défiler vers le bas et choisissez **"Sur l'écran d'accueil"**.
-    3. Validez avec **"Ajouter"**.
-
-    **🤖 Sur Android (Chrome)**:
-    1. Appuyez sur les **trois points** ⋮ dans le coin supérieur droit.
-    2. Sélectionnez **"Installer l'application"** ou **"Ajouter à l'écran d'accueil"**.
-
-    **💻 Sur PC / Mac (Chrome / Edge)**:
-    1. Cliquez sur les **trois points** ⋮ dans la barre d'adresse du navigateur.
-    2. Cherchez **"Enregistrer et partager"** ou **"Applications"**.
-    3. Choisissez **"Installer cette application"** ou **"Créer un raccourci"**.
-    """)
-
 # Initialisation de la session
 if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = set()
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# Logo SVG Krea + Bouton Installation côte à côte sur mobile et PC
-col_logo, col_inst = st.columns([3.5, 1])
-with col_logo:
-    st.markdown("""
-    <div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
-          <defs>
-            <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#8B5CF6" />
-              <stop offset="100%" stop-color="#2563EB" />
-            </linearGradient>
-            <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
-              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
-            </linearGradient>
-          </defs>
-          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
-          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
-          <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
-            <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
-            <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
-          </g>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
-          <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
-          <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
-        </svg>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_inst:
-    st.write("")
-    if st.button("📱 Installer l'app"):
-        show_install_instructions()
+# Logo SVG Krea principal
+st.markdown("""
+<div style="margin-top: 0px; margin-bottom: 15px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 110" width="440" style="max-width: 100%; height: auto;">
+      <defs>
+        <linearGradient id="kreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8B5CF6" />
+          <stop offset="100%" stop-color="#2563EB" />
+        </linearGradient>
+        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+        </linearGradient>
+      </defs>
+      <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGrad)" transform="rotate(-6 60 56)" />
+      <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGrad)" />
+      <g font-family="sans-serif" font-weight="900" fill="#FFFFFF">
+        <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
+        <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
+      </g>
+      <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+      <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
+      <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
+    </svg>
+</div>
+""", unsafe_allow_html=True)
 
 # Sources RSS
 SOURCES = [
@@ -685,3 +636,27 @@ elif selected_category == "⭐ Favoris":
     st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris.")
 else:
     st.info("Aucun article trouvé pour ces critères.")
+
+# Footer centré
+st.markdown("""
+<div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="50" height="50" style="filter: drop-shadow(0px 4px 12px rgba(139, 92, 246, 0.3));">
+          <defs>
+            <linearGradient id="kreaGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8B5CF6" />
+              <stop offset="100%" stop-color="#2563EB" />
+            </linearGradient>
+            <linearGradient id="layerGradFooter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
+          <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
+          <text x="53" y="64" font-family="sans-serif" font-weight="900" font-size="45" fill="#FFFFFF" text-anchor="middle">k</text>
+        </svg>
+    </div>
+    <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">by Graphis Studio</p>
+</div>
+""", unsafe_allow_html=True)
