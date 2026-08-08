@@ -277,7 +277,7 @@ EXCLUDED_CATEGORIES = ["developpement-personnel", "sante", "bien-etre", "politiq
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement photo"],
-    "InDesign": ["indesign", "mise en page", "typographie", "edition"],
+    "Adobe": ["adobe", "creative cloud", "indesign", "illustrator", "acrobat", "premiere", "after effects", "xd", "lightroom", "photoshop"],
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
     "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
     "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage"],
@@ -286,10 +286,16 @@ KEYWORDS = {
     "AI": ["ia", "intelligence artificielle", "midjourney", "firefly", "chatgpt", "dall-e", "stable diffusion"]
 }
 
+# Retrait explicite d'Illustrator et InDesign des clés de catégories pour fusionner dans Adobe
+if "Illustrator" in KEYWORDS:
+    del KEYWORDS["Illustrator"]
+if "InDesign" in KEYWORDS:
+    del KEYWORDS["InDesign"]
+
 CATEGORY_COLORS = {
-    "Photoshop": "#38BDF8", "Lightroom": "#60A5FA", "InDesign": "#F43F5E",
-    "Illustrator": "#FB923C", "AI": "#A855F7", "Graphisme": "#EC4899",
-    "Photo": "#F59E0B", "Tutoriels": "#10B981", "Expos photos": "#E11D48", "Général": "#64748B"
+    "Photoshop": "#38BDF8", "Lightroom": "#60A5FA", "Adobe": "#FF0000",
+    "Photo": "#F59E0B", "Graphisme": "#EC4899", "Tutoriels": "#10B981", 
+    "Expos photos": "#E11D48", "AI": "#A855F7", "Général": "#64748B"
 }
 
 def clean_text(raw_html):
@@ -447,7 +453,7 @@ st.markdown(f"""
 </script>
 """, unsafe_allow_html=True)
 
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
+categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
@@ -479,7 +485,7 @@ for cat, kws in KEYWORDS.items():
 tag_counts = Counter(extracted_tags)
 dynamic_tags = [tag for tag, count in tag_counts.most_common(6)]
 
-fallback_pool = ["Photoshop", "Lightroom", "AI", "Graphisme", "Photo", "Tutoriel", "Midjourney", "Illustrator"]
+fallback_pool = ["Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriel", "Midjourney", "AI"]
 for tag in fallback_pool:
     if len(dynamic_tags) < 6 and tag not in dynamic_tags:
         dynamic_tags.append(tag)
