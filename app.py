@@ -344,16 +344,17 @@ EXCLUDED_CATEGORIES = [
     "fait-divers", "societe", "lifestyle", "psycho", "sante-bien-etre"
 ]
 
+# Suppression de "ai" seul pour éviter le piège du verbe "j'ai" en français
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
     "Lightroom": ["lightroom", "raw", "developpement photo"],
     "InDesign": ["indesign", "mise en page", "typographie", "edition"],
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
-    "Photo": ["photo", "photographie", "appareil photo", "objectif photo", "capteur", "shooting", "portrait photo", "paysage photo", "portraits"],
+    "Photo": ["photo", "photographie", "appareil photo", "objectif photo", "capteur", "shooting", "portrait", "portraits", "paysage photo"],
     "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage", "retrospective"],
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte graphique"],
     "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce photoshop", "formation design", "cours photo"],
-    "AI": ["ia", "ai", "intelligence artificielle", "midjourney", "firefly", "chatgpt"]
+    "AI": ["ia", "intelligence artificielle", "midjourney", "firefly", "chatgpt", "dall-e", "stable diffusion", "generative", "sora", "copilot"]
 }
 
 CATEGORY_COLORS = {
@@ -450,14 +451,30 @@ def estimate_reading_time(text):
     mins = max(1, round(words / 35))
     return f"⏱️ {mins} min"
 
-def detect_article_category(title, summary):
+def detect_article_category(title, summary, source_name=""):
     text = f"{title} {summary}".lower()
-    for cat, kws in KEYWORDS.items():
-        for kw in kws:
-            # Utilisation de limites de mot (\b) pour éviter la fausse correspondance "ai" dans "humain" ou "ia" dans "Sonia"
-            pattern = r'\b' + re.escape(kw) + r'\b'
-            if re.search(pattern, text):
+    
+    # 1. Vérification des outils logiciels et expos d'abord
+    for cat in ["Photoshop", "Lightroom", "InDesign", "Illustrator", "Expos photos", "Tutoriels", "Graphisme"]:
+        for kw in KEYWORDS[cat]:
+            if re.search(r'\b' + re.escape(kw) + r'\b', text):
                 return cat
+
+    # 2. Vérification IA avec mots-clés stricts (Midjourney, ChatGPT, etc.)
+    for kw in KEYWORDS["AI"]:
+        if re.search(r'\b' + re.escape(kw) + r'\b', text):
+            return "AI"
+
+    # 3. Vérification Photo
+    for kw in KEYWORDS["Photo"]:
+        if re.search(r'\b' + re.escape(kw) + r'\b', text):
+            return "Photo"
+
+    # 4. Fallback intelligent selon la source du flux
+    photo_sources = ["L'Œil de la Photographie", "Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "Les Numériques (Photo)"]
+    if source_name in photo_sources:
+        return "Photo"
+
     return "Général"
 
 def get_unique_fallback(title):
@@ -503,7 +520,7 @@ def fetch_all_feeds():
                 dt = parse_entry_date(entry)
                 extracted_url = extract_image_url(entry)
                 
-                cat = detect_article_category(title, summary)
+                cat = detect_article_category(title, summary, feed["name"])
                 articles.append({
                     "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
                     "title": title,
