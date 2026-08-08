@@ -422,10 +422,22 @@ with col_refresh:
         st.rerun()
 
 st.write("✦ **Tendances du moment :**")
-tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
-for idx, tag in enumerate(tags):
-    with tag_cols[idx]:
+
+# Ligne 1 (3 boutons)
+tag_cols_1 = st.columns(3)
+for idx in range(3):
+    with tag_cols_1[idx]:
+        tag = tags[idx]
+        if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
+            st.session_state.search_input = tag
+            st.rerun()
+
+# Ligne 2 (3 boutons)
+tag_cols_2 = st.columns(3)
+for idx in range(3, 6):
+    with tag_cols_2[idx - 3]:
+        tag = tags[idx]
         if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
             st.session_state.search_input = tag
             st.rerun()
