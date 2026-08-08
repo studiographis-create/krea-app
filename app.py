@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import feedparser
 import re
 import requests
@@ -10,11 +9,12 @@ from datetime import datetime, timezone
 import time
 import io
 import base64
+import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # ---------------------------------------------------------
-# Génération dynamique de l'icône PNG HD (512x512) Krea
+# 1. Génération dynamique de l'icône PNG HD (512x512) Krea
 # ---------------------------------------------------------
 @st.cache_data
 def generate_krea_pil_image():
@@ -78,92 +78,46 @@ def generate_krea_pil_image():
 
     return bg
 
-# Création de l'image PIL
 krea_pil_img = generate_krea_pil_image()
 
-# Création de la chaîne Data URI PNG pour le JavaScript Safari
-buffer = io.BytesIO()
-krea_pil_img.save(buffer, format="PNG")
-png_data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode('utf-8')
+# ---------------------------------------------------------
+# 2. Patch physique des icônes du serveur Streamlit
+# ---------------------------------------------------------
+try:
+    streamlit_dir = os.path.dirname(st.__file__)
+    static_dir = os.path.join(streamlit_dir, "static")
+    
+    if os.path.exists(static_dir):
+        # Remplacement des fichiers icônes sur le serveur
+        for icon_filename in ["favicon.png", "apple-touch-icon.png", "apple-touch-icon-precomposed.png"]:
+            target_path = os.path.join(static_dir, icon_filename)
+            krea_pil_img.save(target_path, format="PNG")
 
-# Configuration de la page Streamlit avec l'image PIL directe
+        # Modification du fichier HTML index.html servi par le serveur Streamlit
+        index_html_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_html_path):
+            with open(index_html_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+            
+            if "apple-touch-icon" not in html_content:
+                apple_meta = """
+                <link rel="apple-touch-icon" sizes="512x512" href="./apple-touch-icon.png">
+                <link rel="apple-touch-icon-precomposed" sizes="512x512" href="./apple-touch-icon-precomposed.png">
+                <meta name="apple-mobile-web-app-title" content="Krea">
+                <meta name="application-name" content="Krea">
+                """
+                new_html = html_content.replace("<head>", "<head>" + apple_meta)
+                with open(index_html_path, "w", encoding="utf-8") as f:
+                    f.write(new_html)
+except Exception:
+    pass
+
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
     page_icon=krea_pil_img,
     layout="wide"
 )
-
-# Injection JavaScript active via components.html pour verrouiller le Favicon et Apple Touch Icon
-components.html(f"""
-<script>
-(function() {{
-    var pngUri = "{png_data_uri}";
-    
-    function lockKreaIcons() {{
-        try {{
-            var doc = window.parent.document;
-            if (!doc) return;
-            
-            // 1. Modifier le titre
-            doc.title = "Krea — L'Actu Créative & IA";
-            
-            // 2. Remplacer tous les favicons de l'onglet
-            var favicons = doc.querySelectorAll("link[rel*='icon']");
-            favicons.forEach(function(el) {{
-                el.href = pngUri;
-                el.type = "image/png";
-            }});
-            
-            if (favicons.length === 0) {{
-                var newFav = doc.createElement('link');
-                newFav.rel = 'shortcut icon';
-                newFav.type = 'image/png';
-                newFav.href = pngUri;
-                doc.head.appendChild(newFav);
-            }}
-
-            // 3. Imposer l'Apple Touch Icon pour Safari Mac Dock & iPhone
-            var appleIcon = doc.querySelector("link[rel='apple-touch-icon']");
-            if (!appleIcon) {{
-                appleIcon = doc.createElement('link');
-                appleIcon.rel = 'apple-touch-icon';
-                appleIcon.sizes = '512x512';
-                appleIcon.href = pngUri;
-                doc.head.appendChild(appleIcon);
-            }} else {{
-                appleIcon.href = pngUri;
-            }}
-
-            var appleIconPre = doc.querySelector("link[rel='apple-touch-icon-precomposed']");
-            if (!appleIconPre) {{
-                appleIconPre = doc.createElement('link');
-                appleIconPre.rel = 'apple-touch-icon-precomposed';
-                appleIconPre.href = pngUri;
-                doc.head.appendChild(appleIconPre);
-            }} else {{
-                appleIconPre.href = pngUri;
-            }}
-
-            // 4. Meta nom d'application pour Apple / Safari
-            var metaTitle = doc.querySelector("meta[name='apple-mobile-web-app-title']");
-            if (!metaTitle) {{
-                metaTitle = doc.createElement('meta');
-                metaTitle.name = 'apple-mobile-web-app-title';
-                metaTitle.content = 'Krea';
-                doc.head.appendChild(metaTitle);
-            }} else {{
-                metaTitle.content = 'Krea';
-            }}
-        }} catch(e) {{
-            console.log("Krea Icon Loader:", e);
-        }}
-    }}
-
-    lockKreaIcons();
-    setInterval(lockKreaIcons, 500);
-}})();
-</script>
-""", height=0, width=0)
 
 # Style CSS : Mesh gradient, Glassmorphism & Responsive
 st.markdown("""
