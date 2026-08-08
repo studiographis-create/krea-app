@@ -396,10 +396,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 # Sources RSS
 SOURCES = [
-    {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
-    {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
-    {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/im-outils/intelligence-artificielle/feed/"},
+    {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
     {"name": "Apprendre la Photo", "url": "https://apprendre-la-photo.fr/feed/"},
     {"name": "Créapills", "url": "https://creapills.com/feed"},
@@ -413,7 +411,7 @@ SOURCES = [
     {"name": "Le Monde Informatique", "url": "https://www.lemondeinformatique.fr/rss/rss.xml"},
     {"name": "ActuIA", "url": "https://www.actuia.com/feed/"},
     {"name": "L'Usine Digitale", "url": "https://www.usine-digitale.fr/rss"},
-    {"name": "RTBF - IA", "url": "https://www.rtbf.be/rss/tag_intelligence-artificielle.xml"},
+    {"name": "RTBF - IA", "url": "https://www.rtbf.be/rss/tag_intelligence-artificeielle.xml"},
     {"name": "L'Œil de la Photographie", "url": "https://loeildelaphotographie.com/fr/feed/"},
     {"name": "Graine de Photographe", "url": "https://blog.grainedephotographe.com/feed/"},
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
