@@ -482,7 +482,7 @@ if selected_category == "☆ Favoris" and filtered_articles:
     col_fav_title, col_fav_json, col_fav_md = st.columns([2, 1, 1])
     with col_fav_title: st.subheader(f"☆ Vos favoris ({len(filtered_articles)})")
     with col_fav_json:
-        st.download_button("⤓ JSON", data=json.dumps(filtered_articles, indent=2, ensure_ascii=False), file_name="favoris_krea.json", mime="application/json", use_container_width=True)
+        st.download_button("⤓ JSON", data=json.dumps(filtered_articles, indent=2, ensure_ascii=False, default=str), file_name="favoris_krea.json", mime="application/json", use_container_width=True)
     with col_fav_md:
         md_content = "# ☆ Krea — Revue de Presse\n\n"
         for art in filtered_articles:
