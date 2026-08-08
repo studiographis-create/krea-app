@@ -49,22 +49,21 @@ st.markdown(f"""
         background-image: radial-gradient(at 15% 10%, rgba(139, 92, 246, 0.22) 0px, transparent 40%),
                           radial-gradient(at 85% 5%, rgba(37, 99, 235, 0.20) 0px, transparent 45%);
         color: #f1f5f9;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"] {
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
         padding: 14px !important;
         transition: transform 0.25s ease;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    }}
+    div[data-testid="stVerticalBlockBorderWrapper"]:hover {{
         transform: translateY(-4px) !important;
         border-color: #8b5cf6 !important;
-    }
-    .article-read { opacity: 0.65; filter: grayscale(15%); }
-    .cat-badge { font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }
-    .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
-    .hero-badge { background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }
+    }}
+    .article-read {{ opacity: 0.65; filter: grayscale(15%); }}
+    .cat-badge {{ font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }}
+    .read-badge {{ font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,7 +81,6 @@ def show_install_instructions():
     - Appuyez sur les **trois points** (⋮) puis **"Installer l'application"**.
     """)
 
-# --- ETAT DE SESSION ---
 if "bookmarks" not in st.session_state: st.session_state.bookmarks = set()
 if "read_articles" not in st.session_state: st.session_state.read_articles = set()
 if "category_views" not in st.session_state: st.session_state.category_views = {}
@@ -204,7 +202,6 @@ def fetch_all_feeds():
 
 all_fetched = fetch_all_feeds()
 
-# --- EN-TÊTE PROPRE ---
 col_logo, col_inst = st.columns([5, 1])
 with col_logo:
     st.markdown("## 🎨 Krea — L'Actu Créative & IA")
@@ -226,7 +223,6 @@ with col_ref:
 
 st.divider()
 
-# --- FILTRAGE ---
 filtered = []
 for art in all_fetched:
     txt = f"{art['title']} {art['summary']}".lower()
@@ -236,7 +232,6 @@ for art in all_fetched:
     if search_query.strip() and search_query.lower() not in txt: continue
     filtered.append(art)
 
-# --- AFFICHAGE ---
 if filtered:
     cols = st.columns(3) if view_mode == "Grille" else [st.container()]
     for idx, art in enumerate(filtered[:st.session_state.articles_limit]):
@@ -274,7 +269,6 @@ if filtered:
 else:
     st.info("Aucun article trouvé.")
 
-# --- FOOTER ---
 st.markdown("""
 <div style="text-align: center; margin-top: 50px; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.08);">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="45" height="45"><rect x="15" y="12" width="76" height="76" rx="18" fill="#8B5CF6"/><text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text></svg>
