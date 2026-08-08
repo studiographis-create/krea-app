@@ -277,8 +277,8 @@ if "bookmarks" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# En-tête : Logo SVG Krea (à gauche) + Bouton Installation (à droite)
-col_logo, col_inst = st.columns([3.5, 1])
+# En-tête : Logo SVG Krea (à gauche) + Bouton Compact (à droite)
+col_logo, col_inst = st.columns([6, 1])
 with col_logo:
     st.markdown("""
     <div style="margin-top: 0px; margin-bottom: 10px; filter: drop-shadow(0px 8px 24px rgba(139, 92, 246, 0.25));">
@@ -308,7 +308,7 @@ with col_logo:
 
 with col_inst:
     st.write("")
-    if st.button("📱 Installer l'app", use_container_width=True):
+    if st.button("📱 Installer l'app"):
         show_install_instructions()
 
 st.markdown("<br>", unsafe_allow_html=True)
