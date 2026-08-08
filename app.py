@@ -37,20 +37,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# Style CSS global
-st.markdown(f"""
+# Style CSS global (corrigé sans le 'f' préfixe)
+st.markdown("""
 <style>
-    header {{visibility: hidden;}}
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    div[data-testid="stDecoration"] {{display: none;}}
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    div[data-testid="stDecoration"] {display: none;}
 
-    .main .block-container, div[data-testid="stMainBlockContainer"] {{
+    .main .block-container, div[data-testid="stMainBlockContainer"] {
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
     }
 
-    .stApp {{
+    .stApp {
         background-color: #0b0f19;
         background-image: 
             radial-gradient(at 15% 10%, rgba(139, 92, 246, 0.22) 0px, transparent 40%),
@@ -61,47 +61,47 @@ st.markdown(f"""
         color: #f1f5f9;
     }
 
-    div[data-testid="stRadio"] {{
+    div[data-testid="stRadio"] {
         background-color: rgba(30, 41, 59, 0.75) !important;
         backdrop-filter: blur(12px) !important;
         padding: 14px 20px !important;
         border-radius: 14px !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
-    div[data-testid="stRadio"] label {{ color: #ffffff !important; font-weight: 700 !important; }}
+    div[data-testid="stRadio"] label { color: #ffffff !important; font-weight: 700 !important; }
 
-    div[data-testid="stTextInput"] input, div[data-baseweb="select"] > div {{
+    div[data-testid="stTextInput"] input, div[data-baseweb="select"] > div {
         background-color: #f8fafc !important;
         color: #0f172a !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
     }
-    div[data-baseweb="select"] * {{ color: #0f172a !important; }}
+    div[data-baseweb="select"] * { color: #0f172a !important; }
 
-    div[data-testid="stLinkButton"] a, div[data-testid="stButton"] button {{
+    div[data-testid="stLinkButton"] a, div[data-testid="stButton"] button {
         background-color: rgba(30, 41, 59, 0.85) !important;
         color: #f1f5f9 !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
         transition: all 0.25s ease !important;
-    }}
-    div[data-testid="stLinkButton"] a:hover, div[data-testid="stButton"] button:hover {{
+    }
+    div[data-testid="stLinkButton"] a:hover, div[data-testid="stButton"] button:hover {
         border-color: #F472B6 !important;
         color: #F472B6 !important;
         background-color: rgba(30, 41, 59, 0.95) !important;
-    }}
+    }
 
-    div[data-testid="stVerticalBlockBorderWrapper"] {{
+    div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #161e2e !important;
         border: 1px solid #1e293b !important;
         border-radius: 14px !important;
         padding: 14px !important;
-    }}
+    }
 
-    .article-read {{ opacity: 0.65; filter: grayscale(15%); }}
-    .cat-badge {{ font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }}
-    .read-badge {{ font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }}
+    .article-read { opacity: 0.65; filter: grayscale(15%); }
+    .cat-badge { font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }
+    .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
 </style>
 """, unsafe_allow_html=True)
 
