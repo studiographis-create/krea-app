@@ -74,6 +74,9 @@ st.markdown(f"""
 # Style CSS : Mesh gradient, Glassmorphism & Responsive
 st.markdown("""
 <style>
+    html {
+        scroll-behavior: smooth;
+    }
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -193,6 +196,9 @@ if "read_articles" not in st.session_state: st.session_state.read_articles = set
 if "category_views" not in st.session_state: st.session_state.category_views = {}
 if "articles_limit" not in st.session_state: st.session_state.articles_limit = 12
 if "search_input" not in st.session_state: st.session_state.search_input = ""
+
+# Ancre HTML pour le retour en haut
+st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
 col_logo, col_inst = st.columns([6, 1])
 with col_logo:
@@ -562,6 +568,7 @@ else:
 
 st.markdown("""
 <div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+    <a href="#top" style="color: #A855F7; text-decoration: none; font-size: 0.85rem; font-weight: 700; display: inline-block; margin-bottom: 20px;">↑ Retour en haut</a>
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="55" height="55" style="filter: drop-shadow(0px 4px 12px rgba(139, 92, 246, 0.3));">
           <defs>
