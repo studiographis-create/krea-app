@@ -71,7 +71,7 @@ st.markdown(f"""
 </script>
 """, unsafe_allow_html=True)
 
-# Style CSS : Mesh gradient, Glassmorphism & Responsive
+# Style CSS : Mesh gradient, Glassmorphism & Responsive intelligent
 st.markdown("""
 <style>
     html {
@@ -167,12 +167,17 @@ st.markdown("""
         font-weight: 600 !important;
     }
 
-    /* Gestion responsive pour les tendances (Desktop vs Smartphone) */
-    .mobile-trends { display: none; }
-    .desktop-trends { display: block; }
+    /* Transformation automatique des tendances : 1 ligne de 6 sur PC -> 2 lignes de 3 sur mobile */
     @media (max-width: 768px) {
-        .desktop-trends { display: none !important; }
-        .mobile-trends { display: block !important; }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(6)) > div[data-testid="stColumn"] {
+            flex: 1 1 31% !important;
+            min-width: 31% !important;
+        }
     }
 
     .article-read { opacity: 0.65; filter: grayscale(15%); }
@@ -435,33 +440,13 @@ with col_refresh:
 st.write("✦ **Tendances du moment :**")
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 
-# Version Ordinateur (1 ligne de 6 boutons)
-st.markdown('<div class="desktop-trends">', unsafe_allow_html=True)
-tag_cols_d = st.columns(6)
+# 1 seule ligne de 6 colonnes en Python, transformée dynamiquement en 2 lignes de 3 sur mobile via CSS
+tag_cols = st.columns(6)
 for idx, tag in enumerate(tags):
-    with tag_cols_d[idx]:
-        if st.button(f"#{tag}", key=f"trend_desk_{idx}", use_container_width=True):
+    with tag_cols[idx]:
+        if st.button(f"#{tag}", key=f"trend_tag_{idx}", use_container_width=True):
             st.session_state.search_input = tag
             st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Version Smartphone (2 lignes de 3 boutons)
-st.markdown('<div class="mobile-trends">', unsafe_allow_html=True)
-tag_cols_m1 = st.columns(3)
-for idx in range(3):
-    with tag_cols_m1[idx]:
-        tag = tags[idx]
-        if st.button(f"#{tag}", key=f"trend_mob_1_{idx}", use_container_width=True):
-            st.session_state.search_input = tag
-            st.rerun()
-tag_cols_m2 = st.columns(3)
-for idx in range(3, 6):
-    with tag_cols_m2[idx - 3]:
-        tag = tags[idx]
-        if st.button(f"#{tag}", key=f"trend_mob_2_{idx}", use_container_width=True):
-            st.session_state.search_input = tag
-            st.rerun()
-st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
 
