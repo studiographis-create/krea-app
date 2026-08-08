@@ -8,20 +8,70 @@ import urllib.parse
 from datetime import datetime, timezone
 import time
 
-# Configuration de la page
+# SVG du logo Krea (Carré gradient violet/bleu + 'k' incliné + étoile rose)
+svg_icon = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="180" height="180">
+  <defs>
+    <linearGradient id="kreaGradIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="layerGradIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+  <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradIcon)" transform="rotate(-6 60 56)" />
+  <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradIcon)" />
+  <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
+  <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+</svg>"""
+
+encoded_svg = urllib.parse.quote(svg_icon)
+icon_data_uri = f"data:image/svg+xml,{encoded_svg}"
+
+# Manifest Web App pour Android, Windows et Mac Desktop
+manifest_data = {
+    "name": "Krea — L'Actu Créative & IA",
+    "short_name": "Krea",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0b0f19",
+    "theme_color": "#0b0f19",
+    "icons": [
+        {
+            "src": icon_data_uri,
+            "sizes": "192x192 512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
+manifest_data_uri = "data:application/manifest+json," + urllib.parse.quote(json.dumps(manifest_data))
+
+# Configuration de la page Streamlit avec l'icône du logo
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
-    page_icon="☆",
+    page_icon=icon_data_uri,
     layout="wide"
 )
 
-# Style CSS : Mesh gradient, Glassmorphism & Responsive / PWA Rules
-st.markdown("""
+# Injection HTML pour forcer l'icône sur iPhone, Android et Desktop
+pwa_header_html = f"""
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Krea">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0f19">
+<link rel="icon" type="image/svg+xml" href="{icon_data_uri}">
+<link rel="shortcut icon" href="{icon_data_uri}">
+<link rel="apple-touch-icon" href="{icon_data_uri}">
+<link rel="manifest" href="{manifest_data_uri}">
+"""
+st.markdown(pwa_header_html, unsafe_allow_html=True)
+
+# Style CSS : Mesh gradient, Glassmorphism & Responsive
+st.markdown("""
 <style>
     /* Masquer le header Streamlit et le footer par défaut */
     header {visibility: hidden;}
