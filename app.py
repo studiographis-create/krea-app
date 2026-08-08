@@ -394,9 +394,9 @@ with col_inst:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Sources RSS (propre)
+# Sources RSS
 SOURCES = [
-    {"name": "Siècle Digital (Photoshop)", "url": "https://siecledigital.fr/tag/photoshop/feed/"},
+    {"name": "Siècle Digital", "url": "https://www.siecledigital.fr/feed/"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
@@ -550,7 +550,7 @@ def detect_article_category(title, summary, source_name=""):
     if source_name in photo_sources:
         return "Photo"
 
-    return "Géral"
+    return "Général"
 
 def get_unique_fallback(title):
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
