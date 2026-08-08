@@ -315,24 +315,29 @@ def extract_image_url(entry):
             if u: return u
     if 'enclosures' in entry:
         for enc in entry.enclosures:
-            if enc.get('type', '').startswith('image/') or 'image' in enc.get('type', ''):
-                u = clean_url(enc.get('href') or enc.get('url'))
-                if u: return u
+            u = clean_url(enc.get('href') or enc.get('url'))
+            if u: return u
     if 'links' in entry:
         for link in entry.links:
-            if link.get('rel') == 'enclosure' or link.get('type', '').startswith('image/'):
-                u = clean_url(link.get('href'))
-                if u: return u
+            href = link.get('href')
+            if href:
+                u = clean_url(href)
+                if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                    return u
     for c in entry.get('content', []):
         text_src = c.get('value', '')
-        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
+        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in matches:
             u = clean_url(src)
             if u: return u
     for text_src in [entry.get('summary', ''), entry.get('description', '')]:
-        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src)
+        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in matches:
             u = clean_url(src)
+            if u: return u
+        url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)', text_src, re.IGNORECASE)
+        for um in url_matches:
+            u = clean_url(um)
             if u: return u
     return None
 
