@@ -11,7 +11,7 @@ import time
 # Configuration de la page
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
-    page_icon="✨",
+    page_icon="☆",
     layout="wide"
 )
 
@@ -248,15 +248,17 @@ st.markdown("""
         font-weight: 700;
         padding: 2px 7px;
         border-radius: 10px;
-        background-color: rgba(148, 163, 184, 0.2);
+        background-color: transparent;
         color: #94a3b8;
+        border: 1px solid rgba(148, 163, 184, 0.4);
         display: inline-block;
         margin-left: 6px;
     }
 
     .hero-badge {
-        background-color: #F472B6;
-        color: #0f172a;
+        background-color: transparent;
+        color: #F472B6;
+        border: 1px solid #F472B6;
         font-weight: 800;
         font-size: 0.75rem;
         padding: 4px 12px;
@@ -270,7 +272,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Dialog pour installer l'application
-@st.dialog("📱 Installer Krea sur votre appareil")
+@st.dialog("📲 Installer Krea sur votre appareil")
 def show_install_instructions():
     st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
     st.markdown("""
@@ -299,7 +301,7 @@ if "articles_limit" not in st.session_state:
 if "search_input" not in st.session_state:
     st.session_state.search_input = ""
 
-# En-tête : Logo SVG Krea (à gauche) + Bouton Installation (à droite)
+# En-tête : Logo SVG Krea (à gauche avec étoile en contour blanc fin) + Bouton Installation (à droite)
 col_logo, col_inst = st.columns([6, 1])
 with col_logo:
     st.markdown("""
@@ -321,7 +323,7 @@ with col_logo:
             <text x="33" y="65" font-size="35" transform="rotate(-10 33 65)" text-anchor="middle">k</text>
             <text x="61" y="60" font-size="26" text-anchor="middle">rea</text>
           </g>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="none" stroke="#FFFFFF" stroke-width="2" />
           <text x="110" y="46" font-family="sans-serif" font-weight="800" font-size="25" fill="#FFFFFF">L'Actu Créative &amp; IA</text>
           <text x="110" y="70" font-family="sans-serif" font-weight="500" font-size="14.5" fill="#94A3B8">Toute l'actu du design, de la photo et de l'IA.</text>
         </svg>
@@ -330,7 +332,7 @@ with col_logo:
 
 with col_inst:
     st.write("")
-    if st.button("📱 Installer l'app"):
+    if st.button("📲 Installer l'app"):
         show_install_instructions()
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -470,7 +472,7 @@ def format_relative_date(dt):
 def estimate_reading_time(text):
     words = len(text.split())
     mins = max(1, round(words / 35))
-    return f"⏱️ {mins} min"
+    return f"🕒 {mins} min"
 
 def detect_article_category(title, summary, source_name=""):
     text = f"{title} {summary}".lower()
@@ -498,7 +500,7 @@ def get_unique_fallback(title):
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
     return f"https://picsum.photos/seed/{seed}/600/350"
 
-@st.dialog("📖 Aperçu de l'article")
+@st.dialog("▤ Aperçu de l'article")
 def open_preview_modal(article):
     st.session_state.read_articles.add(article["id"])
     if article.get("image_url"):
@@ -507,11 +509,11 @@ def open_preview_modal(article):
             unsafe_allow_html=True
         )
     st.markdown(f"### {article['title']}")
-    st.caption(f"📍 **{article['source']}** • 🕒 {article['relative_date']} • {article['reading_time']}")
+    st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
     st.write(article['summary'])
     st.divider()
     
-    st.markdown("**📋 Copier le lien direct :**")
+    st.markdown("**⎘ Copier le lien direct :**")
     st.code(article['link'], language=None)
     
     encoded_url = urllib.parse.quote(article['link'])
@@ -519,11 +521,11 @@ def open_preview_modal(article):
     
     col_open, col_wa, col_x = st.columns([2, 1, 1])
     with col_open:
-        st.link_button("🌐 Ouvrir le site d'origine", article['link'], use_container_width=True)
+        st.link_button("↗ Ouvrir le site d'origine", article['link'], use_container_width=True)
     with col_wa:
         st.link_button("💬 WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
     with col_x:
-        st.link_button("𝕏 Share", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
+        st.link_button("↗ Share 𝕏", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
 
 @st.cache_data(ttl=1800, show_spinner="Chargement de l'actualité Krea...")
 def fetch_all_feeds():
@@ -566,7 +568,7 @@ def fetch_all_feeds():
     return articles
 
 all_fetched = fetch_all_feeds()
-categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "⭐ Favoris"]
+categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
@@ -574,18 +576,18 @@ with col_source:
     source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
     selected_source = st.selectbox("Source :", source_options)
 with col_search:
-    search_query = st.text_input("🔍 Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
+    search_query = st.text_input("⌕ Mot-clé :", value=st.session_state.search_input, placeholder="ex: tutoriel, midjourney, portrait...")
 with col_view:
     st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
     view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
 with col_refresh:
     st.write("")
     st.write("")
-    if st.button("Actualiser", use_container_width=True):
+    if st.button("↻ Actualiser", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
-st.write("🔥 **Tendances du moment :**")
+st.write("✦ **Tendances du moment :**")
 tag_cols = st.columns(6)
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 for idx, tag in enumerate(tags):
@@ -599,7 +601,7 @@ st.divider()
 filtered_articles = []
 for art in all_fetched:
     text_to_check = f"{art['title']} {art['summary']}".lower()
-    if selected_category == "⭐ Favoris":
+    if selected_category == "☆ Favoris":
         if art["link"] not in st.session_state.bookmarks: continue
         cat_match = True
     elif selected_category == "Tous": cat_match = True
@@ -621,20 +623,20 @@ for art in all_fetched:
         art_copy["summary_short"] = art["summary"][:160] + "..." if len(art["summary"]) > 160 else art["summary"]
         filtered_articles.append(art_copy)
 
-if selected_category == "⭐ Favoris" and filtered_articles:
+if selected_category == "☆ Favoris" and filtered_articles:
     col_fav_title, col_fav_json, col_fav_md = st.columns([2, 1, 1])
     with col_fav_title: 
-        st.subheader(f"📌 Vos articles favoris ({len(filtered_articles)})")
+        st.subheader(f"☆ Vos articles favoris ({len(filtered_articles)})")
     with col_fav_json:
         json_favs = json.dumps(filtered_articles, indent=2, ensure_ascii=False)
-        st.download_button("📥 Exporter (JSON)", data=json_favs, file_name="favoris_krea.json", mime="application/json", use_container_width=True)
+        st.download_button("⤓ Exporter (JSON)", data=json_favs, file_name="favoris_krea.json", mime="application/json", use_container_width=True)
     with col_fav_md:
-        md_content = "# 📰 Krea — Revue de Presse\n\n"
+        md_content = "# ☆ Krea — Revue de Presse\n\n"
         for art in filtered_articles:
             md_content += f"### [{art['title']}]({art['link']})\n"
             md_content += f"**Source:** {art['source']} • **Catégorie:** {art['category']} • **Date:** {art['relative_date']}\n\n"
             md_content += f"> {art['summary']}\n\n---\n\n"
-        st.download_button("📝 Revue de Presse (MD)", data=md_content, file_name="revue_de_presse_krea.md", mime="text/markdown", use_container_width=True)
+        st.download_button("⎘ Revue de Presse (MD)", data=md_content, file_name="revue_de_presse_krea.md", mime="text/markdown", use_container_width=True)
 
 if filtered_articles:
     show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "Grille")
@@ -648,15 +650,15 @@ if filtered_articles:
         
         with st.container(border=True):
             st.markdown(f'<div class="{hero_read_class}">', unsafe_allow_html=True)
-            st.markdown('<span class="hero-badge">🔥 À LA UNE</span>', unsafe_allow_html=True)
+            st.markdown('<span class="hero-badge">✦ À LA UNE</span>', unsafe_allow_html=True)
             if is_hero_read:
-                st.markdown('<span class="read-badge">✔️ Lu</span>', unsafe_allow_html=True)
+                st.markdown('<span class="read-badge">✓ Lu</span>', unsafe_allow_html=True)
             col_hero_img, col_hero_text = st.columns([1.2, 1])
             with col_hero_img:
                 st.markdown(f'<img src="{hero["image_url"]}" style="width:100%; height:260px; object-fit:cover; border-radius:12px; display:block;">', unsafe_allow_html=True)
             with col_hero_text:
                 st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{hero["category"]}</span>', unsafe_allow_html=True)
-                st.caption(f"📍 **{hero['source']}** • 🕒 {hero['relative_date']} • {hero['reading_time']}")
+                st.caption(f"⌖ **{hero['source']}** • {hero['relative_date']} • {hero['reading_time']}")
                 st.markdown(f"### {hero['title']}")
                 st.write(hero['summary'][:220] + "..." if len(hero['summary']) > 220 else hero['summary'])
                 c1, c2, c3 = st.columns([1.5, 1, 1])
@@ -667,7 +669,7 @@ if filtered_articles:
                         open_preview_modal(hero)
                 with c3:
                     is_fav = hero['link'] in st.session_state.bookmarks
-                    fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
+                    fav_icon = "☆ Retirer" if is_fav else "☆ Favori"
                     if st.button(fav_icon, key=f"fav_hero_{hero['id']}", use_container_width=True):
                         if is_fav: st.session_state.bookmarks.remove(hero['link'])
                         else: st.session_state.bookmarks.add(hero['link'])
@@ -684,7 +686,7 @@ if filtered_articles:
             col = cols[idx % 3]
             cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
             is_read = article['id'] in st.session_state.read_articles
-            read_badge = '<span class="read-badge">✔️ Lu</span>' if is_read else ''
+            read_badge = '<span class="read-badge">✓ Lu</span>' if is_read else ''
             read_class = "article-read" if is_read else ""
             
             with col:
@@ -692,7 +694,7 @@ if filtered_articles:
                     st.markdown(f'<div class="{read_class}">', unsafe_allow_html=True)
                     st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:180px; object-fit:cover; border-radius:10px; margin-bottom:8px; display:block;">', unsafe_allow_html=True)
                     st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span> {read_badge}', unsafe_allow_html=True)
-                    st.caption(f"📍 **{article['source']}** • {article['relative_date']}")
+                    st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
                     c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
@@ -701,7 +703,7 @@ if filtered_articles:
                         if st.button("Aperçu", key=f"prev_{article['id']}", use_container_width=True): open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
-                        fav_icon = "⭐" if is_fav else "☆"
+                        fav_icon = "☆" if is_fav else "☆"
                         if st.button(fav_icon, key=f"fav_{article['id']}", use_container_width=True):
                             if is_fav: st.session_state.bookmarks.remove(article['link'])
                             else: st.session_state.bookmarks.add(article['link'])
@@ -711,7 +713,7 @@ if filtered_articles:
         for article in visible_articles:
             cat_color = CATEGORY_COLORS.get(article['category'], "#64748B")
             is_read = article['id'] in st.session_state.read_articles
-            read_badge = '<span class="read-badge">✔️ Lu</span>' if is_read else ''
+            read_badge = '<span class="read-badge">✓ Lu</span>' if is_read else ''
             read_class = "article-read" if is_read else ""
             
             with st.container(border=True):
@@ -721,7 +723,7 @@ if filtered_articles:
                     st.markdown(f'<img src="{article["image_url"]}" style="width:100%; height:110px; object-fit:cover; border-radius:8px; display:block;">', unsafe_allow_html=True)
                 with c_content:
                     st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span> {read_badge}', unsafe_allow_html=True)
-                    st.caption(f"📍 **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
+                    st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • {article['reading_time']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
                     c_read, c_prev, c_fav = st.columns([1.5, 1, 0.8])
@@ -730,7 +732,7 @@ if filtered_articles:
                         if st.button("Aperçu", key=f"prev_list_{article['id']}", use_container_width=True): open_preview_modal(article)
                     with c_fav:
                         is_fav = article['link'] in st.session_state.bookmarks
-                        fav_icon = "⭐ Retirer" if is_fav else "☆ Favori"
+                        fav_icon = "☆ Retirer" if is_fav else "☆ Favori"
                         if st.button(fav_icon, key=f"fav_list_{article['id']}", use_container_width=True):
                             if is_fav: st.session_state.bookmarks.remove(article['link'])
                             else: st.session_state.bookmarks.add(article['link'])
@@ -742,16 +744,16 @@ if filtered_articles:
         st.markdown("<br>", unsafe_allow_html=True)
         col_m1, col_m2, col_m3 = st.columns([1, 1, 1])
         with col_m2:
-            if st.button("🔽 Charger plus d'articles", use_container_width=True):
+            if st.button("⤓ Charger plus d'articles", use_container_width=True):
                 st.session_state.articles_limit += 12
                 st.rerun()
 
-elif selected_category == "⭐ Favoris":
+elif selected_category == "☆ Favoris":
     st.info("Vous n'avez pas encore d'articles enregistrés dans vos favoris.")
 else:
     st.info("Aucun article trouvé pour ces critères.")
 
-# Footer centré avec grand k incliné et étoile rose
+# Footer centré avec grand k incliné et étoile en contour blanc fin
 st.markdown("""
 <div style="text-align: center; margin-top: 60px; padding: 30px 0 10px 0; border-top: 1px solid rgba(255, 255, 255, 0.08);">
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
@@ -769,7 +771,7 @@ st.markdown("""
           <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
           <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
           <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="none" stroke="#FFFFFF" stroke-width="2" />
         </svg>
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">by Graphis Studio</p>
