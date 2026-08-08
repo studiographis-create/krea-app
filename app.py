@@ -250,6 +250,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "L'Art de la Photo", "url": "https://lartdelaphoto.fr/feed/"},
     {"name": "Le Monde Informatique - Adobe", "url": "https://www.lemondeinformatique.fr/rss/marque/adobe-68.xml"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
@@ -370,7 +371,7 @@ def detect_category(title, summary, source_name):
         for kw in kws:
             if re.search(r'\b' + re.escape(kw) + r'\b', text):
                 return cat
-    if source_name in ["Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine"]:
+    if source_name in ["Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "L'Art de la Photo"]:
         return "Photo"
     return "Général"
 
