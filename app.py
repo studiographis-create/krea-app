@@ -7,31 +7,84 @@ import json
 import urllib.parse
 from datetime import datetime, timezone
 import time
+import io
+import base64
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
-# SVG du logo Krea (Carré gradient violet/bleu + 'k' incliné + étoile rose)
-svg_icon = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" width="180" height="180">
-  <defs>
-    <linearGradient id="kreaGradIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6" />
-      <stop offset="100%" stop-color="#2563EB" />
-    </linearGradient>
-    <linearGradient id="layerGradIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.2"/>
-    </linearGradient>
-  </defs>
-  <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradIcon)" transform="rotate(-6 60 56)" />
-  <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradIcon)" />
-  <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-  <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
-</svg>"""
+# ---------------------------------------------------------
+# Génération dynamique de l'icône PNG HD (512x512) du Logo Krea pour Safari/Apple & PWA
+# ---------------------------------------------------------
+@st.cache_data
+def generate_krea_icon_png():
+    size = 512
+    bg = Image.new("RGBA", (size, size), (11, 15, 25, 255)) # Fond #0b0f19
+    s = size / 110.0
 
-encoded_svg = urllib.parse.quote(svg_icon)
-icon_data_uri = f"data:image/svg+xml,{encoded_svg}"
+    def create_gradient_rect(w, h, corner_radius, color_start, color_end):
+        rect_img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        for y in range(h):
+            r = int(color_start[0] + (color_end[0] - color_start[0]) * y / h)
+            g = int(color_start[1] + (color_end[1] - color_start[1]) * y / h)
+            b = int(color_start[2] + (color_end[2] - color_start[2]) * y / h)
+            ImageDraw.Draw(rect_img).line([(0, y), (w, y)], fill=(r, g, b, 255))
+        mask = Image.new("L", (w, h), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, w, h], radius=corner_radius, fill=255)
+        rect_img.putalpha(mask)
+        return rect_img
 
-# Manifest Web App pour Android, Windows et Mac Desktop
+    w_card = int(76 * s)
+    h_card = int(76 * s)
+    rx = int(18 * s)
+
+    # Carte arrière cyan/bleue
+    back_card = create_gradient_rect(w_card, h_card, rx, (6, 182, 212), (59, 130, 246))
+    back_card.putalpha(Image.fromarray((np.array(back_card.getchannel('A')) * 0.4).astype(np.uint8)))
+    back_card_rot = back_card.rotate(-6, resample=Image.BICUBIC, expand=True)
+
+    # Carte avant violette/bleue
+    front_card = create_gradient_rect(w_card, h_card, rx, (139, 92, 246), (37, 99, 235))
+
+    bg.paste(back_card_rot, (int(18 * s), int(12 * s)), back_card_rot)
+    bg.paste(front_card, (int(15 * s), int(12 * s)), front_card)
+
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", int(58 * s))
+    except:
+        font = ImageFont.load_default()
+
+    # Lettre 'k'
+    k_img = Image.new("RGBA", (int(60 * s), int(70 * s)), (0, 0, 0, 0))
+    k_draw = ImageDraw.Draw(k_img)
+    k_draw.text((int(5 * s), int(-5 * s)), "k", font=font, fill=(255, 255, 255, 255))
+    k_rot = k_img.rotate(-10, resample=Image.BICUBIC, expand=True)
+    bg.paste(k_rot, (int(25 * s), int(18 * s)), k_rot)
+
+    # Étoile rose
+    star_img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    star_draw = ImageDraw.Draw(star_img)
+    cx, cy = 88 * s, 14 * s
+    r_outer = 11 * s
+    star_pts = []
+    N = 100
+    for i in range(N):
+        angle = 2 * np.pi * i / N
+        x = cx + r_outer * (np.cos(angle)**3)
+        y = cy + r_outer * (np.sin(angle)**3)
+        star_pts.append((x, y))
+    star_draw.polygon(star_pts, fill=(244, 114, 182, 255))
+    bg.paste(star_img, (0, 0), star_img)
+
+    buffer = io.BytesIO()
+    bg.save(buffer, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+# Génération du Data URI PNG
+png_icon_uri = generate_krea_icon_png()
+
+# Manifest Web App PWA
 manifest_data = {
-    "name": "Krea — L'Actu Créative & IA",
+    "name": "Krea",
     "short_name": "Krea",
     "start_url": "./",
     "display": "standalone",
@@ -39,34 +92,82 @@ manifest_data = {
     "theme_color": "#0b0f19",
     "icons": [
         {
-            "src": icon_data_uri,
-            "sizes": "192x192 512x512",
-            "type": "image/svg+xml",
+            "src": png_icon_uri,
+            "sizes": "512x512",
+            "type": "image/png",
             "purpose": "any maskable"
         }
     ]
 }
 manifest_data_uri = "data:application/manifest+json," + urllib.parse.quote(json.dumps(manifest_data))
 
-# Configuration de la page Streamlit avec l'icône du logo
+# Configuration de la page Streamlit
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
-    page_icon=icon_data_uri,
+    page_icon=png_icon_uri,
     layout="wide"
 )
 
-# Injection HTML pour forcer l'icône sur iPhone, Android et Desktop
+# Injection HTML & JavaScript pour imposer l'icône PNG et le nom Krea dans Safari Mac & iPhone
 pwa_header_html = f"""
 <meta name="referrer" content="no-referrer">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Krea">
+<meta name="application-name" content="Krea">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0f19">
-<link rel="icon" type="image/svg+xml" href="{icon_data_uri}">
-<link rel="shortcut icon" href="{icon_data_uri}">
-<link rel="apple-touch-icon" href="{icon_data_uri}">
+
+<link rel="icon" type="image/png" sizes="512x512" href="{png_icon_uri}">
+<link rel="shortcut icon" type="image/png" href="{png_icon_uri}">
+<link rel="apple-touch-icon" sizes="512x512" href="{png_icon_uri}">
+<link rel="apple-touch-icon-precomposed" sizes="512x512" href="{png_icon_uri}">
 <link rel="manifest" href="{manifest_data_uri}">
+
+<script>
+    (function() {{
+        var pngUri = "{png_icon_uri}";
+        document.title = "Krea";
+        
+        function enforceAppleIcon() {{
+            var head = document.head || document.getElementsByTagName('head')[0];
+            
+            // Nettoyer les anciennes icônes Streamlit
+            var oldIcons = document.querySelectorAll("link[rel*='icon']");
+            oldIcons.forEach(function(el) {{
+                if (!el.getAttribute('href').startsWith('data:image/png')) {{
+                    el.parentNode.removeChild(el);
+                }}
+            }});
+            
+            // Forcer l'icône Apple Touch Icon
+            var appleIcon = document.querySelector("link[rel='apple-touch-icon']");
+            if (!appleIcon) {{
+                appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                appleIcon.sizes = '512x512';
+                appleIcon.href = pngUri;
+                head.appendChild(appleIcon);
+            }} else {{
+                appleIcon.href = pngUri;
+            }}
+            
+            var appleIconPre = document.querySelector("link[rel='apple-touch-icon-precomposed']");
+            if (!appleIconPre) {{
+                appleIconPre = document.createElement('link');
+                appleIconPre.rel = 'apple-touch-icon-precomposed';
+                appleIconPre.href = pngUri;
+                head.appendChild(appleIconPre);
+            }} else {{
+                appleIconPre.href = pngUri;
+            }}
+        }}
+        
+        enforceAppleIcon();
+        setTimeout(enforceAppleIcon, 500);
+        setTimeout(enforceAppleIcon, 1500);
+    }})();
+</script>
 """
 st.markdown(pwa_header_html, unsafe_allow_html=True)
 
