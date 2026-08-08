@@ -151,6 +151,19 @@ st.markdown("""
         box-shadow: 0 12px 28px -5px rgba(139, 92, 246, 0.25) !important;
     }
 
+    /* Style du spinner de chargement en mode sombre */
+    div[data-testid="stSpinner"] {
+        background-color: rgba(22, 30, 46, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 14px !important;
+        padding: 16px !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    }
+    div[data-testid="stSpinner"] p, div[data-testid="stSpinner"] span {
+        color: #f1f5f9 !important;
+        font-weight: 600 !important;
+    }
+
     .article-read { opacity: 0.65; filter: grayscale(15%); }
     .cat-badge { font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }
     .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
