@@ -349,13 +349,11 @@ KEYWORDS = {
     "Lightroom": ["lightroom", "raw", "developpement photo"],
     "InDesign": ["indesign", "mise en page", "typographie", "edition"],
     "Illustrator": ["illustrator", "vectoriel", "vecteur", "dessin"],
-    "AI": ["ia", "ai", "intelligence artificielle", "midjourney", "firefly", "chatgpt"],
-    "Graphisme": ["design graphique", "graphiste", "logo", "branding", "typographie", "charte graphique"],
-    "Photo": ["photo", "photographie", "appareil photo", "objectif photo", "capteur", "shooting", "portrait photo", "paysage photo"],
+    "Photo": ["photo", "photographie", "appareil photo", "objectif photo", "capteur", "shooting", "portrait photo", "paysage photo", "portraits"],
+    "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage", "retrospective"],
+    "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte graphique"],
     "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce photoshop", "formation design", "cours photo"],
-    "Expos photos": [
-        "exposition", "expositions", "expo photo", "galerie", "vernissage", "retrospective"
-    ]
+    "AI": ["ia", "ai", "intelligence artificielle", "midjourney", "firefly", "chatgpt"]
 }
 
 CATEGORY_COLORS = {
@@ -455,8 +453,11 @@ def estimate_reading_time(text):
 def detect_article_category(title, summary):
     text = f"{title} {summary}".lower()
     for cat, kws in KEYWORDS.items():
-        if any(kw in text for kw in kws):
-            return cat
+        for kw in kws:
+            # Utilisation de limites de mot (\b) pour éviter la fausse correspondance "ai" dans "humain" ou "ia" dans "Sonia"
+            pattern = r'\b' + re.escape(kw) + r'\b'
+            if re.search(pattern, text):
+                return cat
     return "Général"
 
 def get_unique_fallback(title):
@@ -567,7 +568,7 @@ for art in all_fetched:
         cat_match = is_expos_source or kw_match
     else:
         kw_list = KEYWORDS.get(selected_category, [])
-        cat_match = any(kw in text_to_check for kw in kw_list)
+        cat_match = any(re.search(r'\b' + re.escape(kw) + r'\b', text_to_check) for kw in kw_list)
     if selected_source != "Toutes les sources" and art["source"] != selected_source: source_match = False
     else: source_match = True
     if not search_query.strip(): search_match = True
