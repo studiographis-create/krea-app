@@ -275,7 +275,10 @@ SOURCES = [
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
 ]
 
-EXCLUDED_CATEGORIES = ["developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", "automobile"]
+EXCLUDED_CATEGORIES = [
+    "developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", "automobile",
+    "bons-plans", "soldes", "promo", "deals", "shopping", "forfaits", "telecom", "crypto", "bitcoin", "finance", "bourse", "immobilier", "electromenager"
+]
 
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche"],
