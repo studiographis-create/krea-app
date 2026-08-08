@@ -394,9 +394,8 @@ with col_inst:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Sources RSS (sans Adobe Blog FR)
+# Sources RSS (sans Graphiste.com et sans Adobe Blog FR)
 SOURCES = [
-    {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/im-outils/intelligence-artificielle/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
