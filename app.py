@@ -394,8 +394,9 @@ with col_inst:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Sources RSS (avec l'URL générale corrigée pour Blog du Modérateur)
+# Sources RSS
 SOURCES = [
+    {"name": "J'ai un pote dans la com (Photoshop)", "url": "https://jai-un-pote-dans-la.com/tag/photoshop/feed/"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
@@ -549,7 +550,7 @@ def detect_article_category(title, summary, source_name=""):
     if source_name in photo_sources:
         return "Photo"
 
-    return "Général"
+    return "Géral"
 
 def get_unique_fallback(title):
     seed = int(hashlib.md5(title.encode('utf-8')).hexdigest(), 16) % 1000
