@@ -59,7 +59,7 @@ st.markdown(f"""
         if (links.length === 0) {{
             var link = doc.createElement('link');
             link.rel = 'shortcut icon';
-            link.type = 'image/svg+xml';
+            link.type = "image/svg+xml";
             link.href = svgUri;
             doc.head.appendChild(link);
         }}
@@ -356,6 +356,10 @@ def open_preview_modal(article):
     st.markdown(f"### {article['title']}")
     st.caption(f"⌖ **{article['source']}** • {article['relative_date']} • 🕒 {max(1, len(article['summary'].split()) // 35)} min")
     st.write(article['summary'])
+    
+    st.caption("📋 Copier le lien de l'article :")
+    st.code(article['link'], language="text")
+    
     st.divider()
     
     encoded_url = urllib.parse.quote(article['link'])
