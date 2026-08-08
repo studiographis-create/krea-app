@@ -160,14 +160,19 @@ st.markdown("""
 
 @st.dialog("⤓ Installer Krea sur votre appareil")
 def show_install_instructions():
-    st.write("Pour garder un accès rapide à Krea, ajoutez-le à votre écran d'accueil :")
+    st.write("Pour garder un accès rapide à Krea, installez-le sur votre appareil :")
     st.markdown("""
+    **💻 Sur PC / Mac (Chrome, Edge, Brave)**:
+    1. Cliquez sur l'icône d'installation (écran avec une flèche) ou le menu (⋮) dans la barre d'adresse.
+    2. Sélectionnez **"Installer Krea"**.
+
     **🍎 Sur iPhone / iPad (Safari)**:
-    1. Appuyez sur le bouton de **Partage**.
+    1. Appuyez sur le bouton de **Partage** (carré avec une flèche).
     2. Choisissez **"Sur l'écran d'accueil"** puis validez.
+
     **🤖 Sur Android (Chrome)**:
-    1. Appuyez sur les **trois points** ⋮.
-    2. Sélectionnez **"Installer l'application"**.
+    1. Appuyez sur les **trois points** (⋮) du menu.
+    2. Sélectionnez **"Installer l'application"** ou **"Ajouter à l'écran d'accueil"**.
     """)
 
 if "bookmarks" not in st.session_state: st.session_state.bookmarks = set()
