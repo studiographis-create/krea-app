@@ -168,11 +168,11 @@ st.markdown("""
     }
 
     /* Gestion responsive pour les tendances (Desktop vs Smartphone) */
-    .mobile-only { display: none; }
-    .desktop-only { display: block; }
+    .mobile-trends { display: none; }
+    .desktop-trends { display: block; }
     @media (max-width: 768px) {
-        .desktop-only { display: none !important; }
-        .mobile-only { display: block !important; }
+        .desktop-trends { display: none !important; }
+        .mobile-trends { display: block !important; }
     }
 
     .article-read { opacity: 0.65; filter: grayscale(15%); }
@@ -399,17 +399,19 @@ def fetch_all_feeds():
 all_fetched = fetch_all_feeds()
 
 # Cache offline local storage (Favoris & Articles lus persistants)
-fav_json_str = json.dumps(json.dumps(fav_articles_data := [a for a in all_fetched if a["link"] in st.session_state.bookmarks], default=str))
-read_json_str = json.dumps(json.dumps(list(st.session_state.read_articles)))
+fav_articles_data = [a for a in all_fetched if a["link"] in st.session_state.bookmarks]
+read_articles_list = list(st.session_state.read_articles)
+fav_json_str = json.dumps(json.dumps(fav_articles_data, default=str))
+read_json_str = json.dumps(json.dumps(read_articles_list))
 
-st.markdown("""
+st.markdown(f"""
 <script>
-    try {
-        localStorage.setItem('krea_offline_favorites', %s);
-        localStorage.setItem('krea_read_articles', %s);
-    } catch(e) {}
+    try {{
+        localStorage.setItem('krea_offline_favorites', {fav_json_str});
+        localStorage.setItem('krea_read_articles', {read_json_str});
+    }} catch(e) {{}}
 </script>
-""" % (fav_json_str, read_json_str), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 categories = ["Tous", "Photoshop", "Lightroom", "InDesign", "Illustrator", "AI", "Graphisme", "Photo", "Tutoriels", "Expos photos", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
@@ -434,7 +436,7 @@ st.write("✦ **Tendances du moment :**")
 tags = ["Midjourney", "Photoshop", "Tutoriel", "Portrait", "Lightroom", "Exposition"]
 
 # Version Ordinateur (1 ligne de 6 boutons)
-st.markdown('<div class="desktop-only">', unsafe_allow_html=True)
+st.markdown('<div class="desktop-trends">', unsafe_allow_html=True)
 tag_cols_d = st.columns(6)
 for idx, tag in enumerate(tags):
     with tag_cols_d[idx]:
@@ -444,7 +446,7 @@ for idx, tag in enumerate(tags):
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Version Smartphone (2 lignes de 3 boutons)
-st.markdown('<div class="mobile-only">', unsafe_allow_html=True)
+st.markdown('<div class="mobile-trends">', unsafe_allow_html=True)
 tag_cols_m1 = st.columns(3)
 for idx in range(3):
     with tag_cols_m1[idx]:
