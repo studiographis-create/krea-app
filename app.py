@@ -394,11 +394,13 @@ with col_inst:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Sources RSS
+# Sources RSS (avec Focus Numérique et Comptoir Photo ajoutées)
 SOURCES = [
     {"name": "Adobe Blog FR", "url": "https://blog.adobe.com/fr/feed.xml"},
     {"name": "Graphiste.com", "url": "https://blog.graphiste.com/feed"},
     {"name": "Phototrend", "url": "https://phototrend.fr/feed/"},
+    {"name": "Focus Numérique", "url": "https://www.focus-numerique.com/feed"},
+    {"name": "Comptoir Photo", "url": "https://www.comptoir-photo.fr/feed/"},
     {"name": "Blog du Modérateur", "url": "https://www.blogdumoderateur.com/im-outils/intelligence-artificielle/feed/"},
     {"name": "Grapheine", "url": "https://www.grapheine.com/feed"},
     {"name": "Apprendre la Photo", "url": "https://apprendre-la-photo.fr/feed/"},
@@ -547,7 +549,7 @@ def detect_article_category(title, summary, source_name=""):
         if re.search(r'\b' + re.escape(kw) + r'\b', text):
             return "Photo"
 
-    photo_sources = ["L'Œil de la Photographie", "Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "Les Numériques (Photo)"]
+    photo_sources = ["L'Œil de la Photographie", "Phototrend", "Focus Numérique", "Comptoir Photo", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "Les Numériques (Photo)"]
     if source_name in photo_sources:
         return "Photo"
 
