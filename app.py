@@ -67,59 +67,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# Injection du favicon Krea et détection du mode PWA (masque le bouton si l'app est installée)
+# Injection du favicon Krea et détection du mode PWA
 st.markdown(
-    f"""<head>
-    <link rel="icon" type="image/svg+xml" href="{svg_data_uri}">
-    <link rel="shortcut icon" type="image/svg+xml" href="{svg_data_uri}">
-    <link rel="apple-touch-icon" href="{svg_data_uri}">
-</head>
-<script>
-(function() {{
-    var svgUri = "{svg_data_uri}";
-    function setFavicon() {{
-        var doc = window.parent ? window.parent.document : document;
-        if (!doc) return;
-        var links = doc.querySelectorAll("link[rel*='icon']");
-        links.forEach(function(l) {{
-            l.href = svgUri;
-            l.type = "image/svg+xml";
-        }});
-        if (links.length === 0) {{
-            var link = doc.createElement('link');
-            link.rel = 'shortcut icon';
-            link.type = "image/svg+xml";
-            link.href = svgUri;
-            doc.head.appendChild(link);
-        }}
-    }}
-
-    function checkPWAStandalone() {{
-        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
-        if (isStandalone) {{
-            var doc = window.parent ? window.parent.document : document;
-            if (!doc) return;
-            var buttons = doc.querySelectorAll('button');
-            buttons.forEach(function(btn) {{
-                if (btn.textContent && btn.textContent.includes('Installer')) {{
-                    var col = btn.closest('div[data-testid="stColumn"]');
-                    if (col) {{
-                        col.style.display = 'none';
-                    }} else {{
-                        btn.style.display = 'none';
-                    }}
-                }}
-            }});
-        }}
-    }}
-
-    setFavicon();
-    checkPWAStandalone();
-    setTimeout(setFavicon, 300);
-    setTimeout(setFavicon, 1000);
-    setInterval(checkPWAStandalone, 500);
-}})();
-</script>""",
+    f"""<head><link rel="icon" type="image/svg+xml" href="{svg_data_uri}"><link rel="shortcut icon" type="image/svg+xml" href="{svg_data_uri}"><link rel="apple-touch-icon" href="{svg_data_uri}"></head><script>(function(){{var svgUri="{svg_data_uri}";function setFavicon(){{var doc=window.parent?window.parent.document:document;if(!doc)return;var links=doc.querySelectorAll("link[rel*='icon']");links.forEach(function(l){{l.href=svgUri;l.type="image/svg+xml";}});if(links.length===0){{var link=doc.createElement('link');link.rel='shortcut icon';link.type="image/svg+xml";link.href=svgUri;doc.head.appendChild(link);}}}}if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone||document.referrer.includes('android-app://')){{document.documentElement.classList.add('pwa-standalone');}}setFavicon();setTimeout(setFavicon,300);setTimeout(setFavicon,1000);}})();</script>""",
     unsafe_allow_html=True
 )
 
@@ -147,6 +97,16 @@ custom_css = """<style>
             radial-gradient(at 70% 25%, rgba(6, 182, 212, 0.12) 0px, transparent 35%);
         background-repeat: no-repeat;
         color: #f1f5f9;
+    }
+
+    /* Masque le bouton d'installation si l'application est ouverte en mode PWA installé */
+    @media (display-mode: standalone) {
+        div[data-testid="stColumn"]:has(#pwa-install-btn) {
+            display: none !important;
+        }
+    }
+    .pwa-standalone div[data-testid="stColumn"]:has(#pwa-install-btn) {
+        display: none !important;
     }
     
     div[data-testid="stWidgetLabel"] p, label p, label {
@@ -291,6 +251,7 @@ with col_logo:
     """, unsafe_allow_html=True)
 
 with col_inst:
+    st.markdown('<div id="pwa-install-btn"></div>', unsafe_allow_html=True)
     st.write("")
     if st.button("⤓ Installer"):
         show_install_instructions()
@@ -502,14 +463,10 @@ read_articles_list = list(st.session_state.read_articles)
 fav_json_str = json.dumps(json.dumps(fav_articles_data, default=str))
 read_json_str = json.dumps(json.dumps(read_articles_list))
 
-st.markdown(f"""
-<script>
-    try {{
-        localStorage.setItem('krea_offline_favorites', {fav_json_str});
-        localStorage.setItem('krea_read_articles', {read_json_str});
-    }} catch(e) {{}}
-</script>
-""", unsafe_allow_html=True)
+st.markdown(
+    f"""<script>try{{localStorage.setItem('krea_offline_favorites',{fav_json_str});localStorage.setItem('krea_read_articles',{read_json_str});}}catch(e){{}}</script>""",
+    unsafe_allow_html=True
+)
 
 categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
