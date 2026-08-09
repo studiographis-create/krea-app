@@ -303,7 +303,7 @@ KEYWORDS = {
     "AI": ["ia", "intelligence artificielle", "midjourney", "chatgpt", "dall-e", "stable diffusion", "firefly"],
     "Adobe": ["adobe", "creative cloud", "acrobat", "substance", "adobe express", "illustrator", "indesign"],
     "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
-    "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage"],
+    "Expos photos": ["expo photo", "expos photos", "expo de photo", "galerie photo", "galeries photo", "vernissage", "exposition de photo", "expositions de photos"],
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte", "illustrator", "indesign"]
 }
 
@@ -730,7 +730,7 @@ st.markdown("""
           <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
           <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
           <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
