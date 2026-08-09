@@ -436,7 +436,7 @@ def fetch_all_feeds():
                         "date": dt,
                         "relative_date": format_relative_date(dt),
                         "category": cat,
-                        "image_url": img if img else f"https://picsum.photos/seed/{abs(hash(title)) % 1000}/600/350",
+                        "image_url": img if img else svg_data_uri,
                         "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
                     })
         except:
