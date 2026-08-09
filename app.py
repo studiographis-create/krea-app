@@ -8,6 +8,7 @@ import urllib.parse
 from datetime import datetime, timezone
 import time
 import base64
+import html
 from collections import Counter
 
 # SVG pur HD du logo Krea (cartes violet/cyan, k incliné, étoile rose)
@@ -334,14 +335,18 @@ def clean_url(url):
 def get_og_image(link):
     if not link or not link.startswith("http"): return None
     try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        resp = requests.get(link, headers=headers, timeout=2.5)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
+        }
+        resp = requests.get(link, headers=headers, timeout=3)
         if resp.status_code == 200:
             og = re.search(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
             if not og:
                 og = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\']', resp.text, re.IGNORECASE)
             if not og:
-                og = re.search(r'<link[^>]+rel=["\']image_src["\'][^>]+href=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
+                og = re.search(r'<link[^>]+rel=["\'](?:image_src|apple-touch-icon)["\'][^>]+href=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
             if og:
                 return clean_url(og.group(1))
     except:
@@ -349,7 +354,7 @@ def get_og_image(link):
     return None
 
 def extract_image_url(entry):
-    # 1. Structure RSS médias standard
+    # 1. Structures médias directes issues du parser RSS
     if 'media_content' in entry:
         for m in entry.media_content:
             u = clean_url(m.get('url'))
@@ -370,54 +375,47 @@ def extract_image_url(entry):
                 if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
                     return u
 
-    # 2. Parsing HTML complet (Feed / Description / Content / Picture / Source)
-    html_sources = []
+    # 2. Collecte et décodage des entités HTML (Résout le problème spécifique Blind Magazine)
+    raw_sources = []
     for c in entry.get('content', []):
-        if isinstance(c, dict):
-            html_sources.append(c.get('value', ''))
-        elif isinstance(c, str):
-            html_sources.append(c)
+        if isinstance(c, dict): raw_sources.append(c.get('value', ''))
+        elif isinstance(c, str): raw_sources.append(c)
             
     if hasattr(entry, 'content_encoded'):
-        html_sources.append(entry.content_encoded)
+        raw_sources.append(entry.content_encoded)
     if 'summary_detail' in entry and isinstance(entry.summary_detail, dict):
-        html_sources.append(entry.summary_detail.get('value', ''))
+        raw_sources.append(entry.summary_detail.get('value', ''))
 
-    html_sources.extend([entry.get('summary', ''), entry.get('description', '')])
+    raw_sources.extend([entry.get('summary', ''), entry.get('description', '')])
+    
+    # Décodage HTML unescape (&lt;img&gt; -> <img>)
+    html_sources = [html.unescape(s) for s in raw_sources if s]
 
     for text_src in html_sources:
         if not text_src: continue
-        
-        # Extraction depuis les balises <source srcset="..."> (Picture HTML5 / Blind Magazine)
-        source_srcset = re.findall(r'<source [^>]*srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for srcset in source_srcset:
-            urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
-            for src in urls:
-                u = clean_url(src)
-                if u and not u.startswith("data:"):
-                    return u
 
-        # Extraction depuis attributs d'images standard et lazy-loading
-        img_attrs = re.findall(r'<img [^>]*(?:\bdata-orig-file|\bdata-large-file|\bdata-lazy-src|\bdata-src|\bsrc)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for src in img_attrs:
+        # Priorité A: Recherche ciblée des fichiers d'upload WordPress (/wp-content/uploads/...)
+        wp_matches = re.findall(r'https?://[^\s<>"\']+/wp-content/uploads/[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
+        for src in wp_matches:
             u = clean_url(src)
-            if u and not u.startswith("data:"):
-                return u
+            if u: return u
 
-        srcset_matches = re.findall(r'srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for srcset in srcset_matches:
-            urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
-            for src in urls:
+        # Priorité B: Balises HTML5 <source> (utilisées par Blind Magazine) et <img>
+        attr_matches = re.findall(r'<(?:img|source) [^>]*(?:\bdata-orig-file|\bdata-large-file|\bdata-lazy-src|\bdata-src|\bsrc|\bsrcset)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        for attr_val in attr_matches:
+            candidate_urls = [s.strip().split()[0] for s in attr_val.split(',') if s.strip()]
+            for src in candidate_urls:
                 u = clean_url(src)
                 if u and not u.startswith("data:"):
                     return u
 
+        # Priorité C: Expression générique sur les liens d'images directs
         url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
         for um in url_matches:
             u = clean_url(um)
             if u: return u
 
-    # 3. Récupération OpenGraph directe sur la page web en secours (Blind Magazine / Creapills)
+    # 3. Récupération OpenGraph de secours avec simulateur navigateur
     link = entry.get("link", "")
     if link:
         og_img = get_og_image(link)
