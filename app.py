@@ -298,13 +298,15 @@ EXCLUDED_CATEGORIES = [
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche", "camera raw", "cameraraw", "bridge"],
     "Lightroom": ["lightroom", "raw", "developpement photo"],
-    "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "formation", "cours", "pas a pas", "apprendre"],
+    "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "astuces", "formation", "cours", "pas a pas", "apprendre", "comment", "video", "vidéo"],
     "AI": ["ia", "intelligence artificielle", "midjourney", "chatgpt", "dall-e", "stable diffusion", "firefly"],
-    "Adobe": ["creative cloud", "acrobat", "substance", "adobe express"],
+    "Adobe": ["adobe", "creative cloud", "acrobat", "substance", "adobe express", "illustrator", "indesign"],
     "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
     "Expos photos": ["exposition", "expositions", "expo photo", "galerie", "vernissage"],
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte", "illustrator", "indesign"]
 }
+
+BADGE_PRIORITY = ["Photoshop", "Lightroom", "AI", "Graphisme", "Tutoriels", "Adobe", "Photo", "Expos photos", "Général"]
 
 CATEGORY_COLORS = {
     "Photoshop": "#38BDF8", "Lightroom": "#60A5FA", "Adobe": "#FF0000",
@@ -350,6 +352,15 @@ def get_og_image(link):
     return None
 
 def extract_image_url(entry):
+    if 'yt_videoid' in entry:
+        return f"https://img.youtube.com/vi/{entry.yt_videoid}/hqdefault.jpg"
+
+    link = entry.get("link", "")
+    if "youtube.com/watch" in link or "youtu.be/" in link:
+        m = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', link)
+        if m:
+            return f"https://img.youtube.com/vi/{m.group(1)}/hqdefault.jpg"
+
     if 'media_thumbnail' in entry:
         for m in entry.media_thumbnail:
             u = clean_url(m.get('url'))
@@ -362,13 +373,6 @@ def extract_image_url(entry):
         for enc in entry.enclosures:
             u = clean_url(enc.get('href') or enc.get('url'))
             if u: return u
-    if 'links' in entry:
-        for link in entry.links:
-            href = link.get('href')
-            if href:
-                u = clean_url(href)
-                if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
-                    return u
 
     raw_sources = []
     for c in entry.get('content', []):
@@ -381,7 +385,6 @@ def extract_image_url(entry):
         raw_sources.append(entry.summary_detail.get('value', ''))
 
     raw_sources.extend([entry.get('summary', ''), entry.get('description', '')])
-    
     html_sources = [html.unescape(s) for s in raw_sources if s]
 
     for text_src in html_sources:
@@ -405,7 +408,6 @@ def extract_image_url(entry):
             u = clean_url(um)
             if u: return u
 
-    link = entry.get("link", "")
     if link:
         og_img = get_og_image(link)
         if og_img:
@@ -431,33 +433,31 @@ def format_relative_date(dt):
     if days < 7: return f"Il y a {days} j"
     return dt.strftime("%d/%m/%Y")
 
-def detect_category(title, summary, source_name):
+def detect_categories(title, summary, source_name):
     text = f"{title} {summary}".lower()
+    cats = set()
     
-    # 1. Priorité absolue aux logiciels photo/retouche (Photoshop, Lightroom)
-    for cat in ["Photoshop", "Lightroom"]:
-        for kw in KEYWORDS[cat]:
-            if re.search(r'\b' + re.escape(kw) + r'\b', text):
-                return cat
-
-    # 2. Priorité aux tutoriels (si mots-clés de tuto OU si la source est YouTube)
-    for kw in KEYWORDS["Tutoriels"]:
-        if re.search(r'\b' + re.escape(kw) + r'\b', text):
-            return "Tutoriels"
-            
-    if "youtube" in source_name.lower():
-        return "Tutoriels"
-
-    # 3. Autres catégories
     for cat, kws in KEYWORDS.items():
-        if cat in ["Photoshop", "Lightroom", "Tutoriels"]: continue
         for kw in kws:
             if re.search(r'\b' + re.escape(kw) + r'\b', text):
-                return cat
+                cats.add(cat)
+                break
 
-    if source_name in ["Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "L'Art de la Photo", "Photo Actus"]:
-        return "Photo"
+    if "youtube" in source_name.lower():
+        cats.add("Tutoriels")
         
+    if source_name in ["Phototrend", "Apprendre la Photo", "OuiOui Photo", "Graine de Photographe", "Blind Magazine", "L'Art de la Photo", "Photo Actus"]:
+        cats.add("Photo")
+        
+    if not cats:
+        cats.add("Général")
+
+    return list(cats)
+
+def get_primary_badge(categories):
+    for cat in BADGE_PRIORITY:
+        if cat in categories:
+            return cat
     return "Général"
 
 @st.dialog("▤ Aperçu de l'article")
@@ -504,7 +504,8 @@ def fetch_all_feeds():
                     
                     dt = parse_entry_date(entry)
                     img = extract_image_url(entry)
-                    cat = detect_category(title, summary, feed["name"])
+                    cats = detect_categories(title, summary, feed["name"])
+                    primary_badge = get_primary_badge(cats)
                     
                     articles.append({
                         "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
@@ -514,7 +515,8 @@ def fetch_all_feeds():
                         "summary": summary,
                         "date": dt,
                         "relative_date": format_relative_date(dt),
-                        "category": cat,
+                        "category": primary_badge,
+                        "categories": cats,
                         "image_url": img if img else placeholder_data_uri,
                         "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
                     })
@@ -591,7 +593,7 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     else:
-        cat_match = (art["category"] == selected_category)
+        cat_match = selected_category in art.get("categories", [art["category"]])
 
     source_match = True if selected_source == "Toutes les sources" else (art["source"] == selected_source)
     search_match = True if not search_query.strip() else (search_query.lower().strip() in text_to_check)
