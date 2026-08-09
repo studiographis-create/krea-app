@@ -299,7 +299,7 @@ EXCLUDED_CATEGORIES = [
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche", "camera raw", "cameraraw", "bridge"],
     "Lightroom": ["lightroom", "raw", "developpement photo", "développement photo", "catalog", "catalogue"],
-    "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "astuces", "formation", "cours", "pas a pas", "apprendre", "comment", "video", "vidéo"],
+    "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "astuces", "formation", "cours", "pas a pas", "apprendre", "comment faire", "comment utiliser", "video", "vidéo"],
     "AI": ["ia", "intelligence artificielle", "midjourney", "chatgpt", "dall-e", "stable diffusion", "firefly"],
     "Adobe": ["adobe", "creative cloud", "acrobat", "substance", "adobe express", "illustrator", "indesign"],
     "Photo": ["photo", "photographie", "appareil photo", "objectif", "portrait", "paysage"],
@@ -505,8 +505,6 @@ def fetch_all_feeds():
                     
                     dt = parse_entry_date(entry)
                     img = extract_image_url(entry)
-                    
-                    # Fallback systématique : si l'extraction d'image échoue, on force le logo Krea
                     final_img = img if (img and img.startswith("http")) else placeholder_data_uri
                     
                     cats = detect_categories(title, summary, feed["name"])
@@ -732,7 +730,7 @@ st.markdown("""
           <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
           <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
           <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
