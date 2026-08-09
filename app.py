@@ -276,7 +276,8 @@ SOURCES = [
 ]
 
 EXCLUDED_CATEGORIES = [
-    "developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", "automobile",
+    "developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", 
+    "automobile", "automobiles", "voiture", "voitures", "véhicule", "vehicule", "véhicules", "vehicules", "auto", "tesla",
     "bons-plans", "soldes", "promo", "deals", "shopping", "forfaits", "telecom", "crypto", "bitcoin", "finance", "bourse", "immobilier", "electromenager",
     "cinema", "cinéma", "a la tv", "à la tv", "programme tv", "programme-tv", "a la tele", "à la télé", "netflix", "disney+", "prime video", "series", "série", "séries", "box-office"
 ]
