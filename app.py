@@ -325,58 +325,89 @@ def clean_url(url):
     if url.startswith("//"):
         url = "https:" + url
     if url.startswith("http"):
-        if any(b in url.lower() for b in ["gravatar", "pixel", "1x1", "blank.gif", "tracker", ".svg"]): return None
+        u_low = url.lower()
+        if any(b in u_low for b in ["gravatar", "pixel", "1x1", "blank.gif", "tracker", ".svg", "default-avatar"]): 
+            return None
         return url
     return None
 
+def get_og_image(link):
+    if not link or not link.startswith("http"): return None
+    try:
+        resp = requests.get(link, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}, timeout=2.5)
+        if resp.status_code == 200:
+            og = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
+            if not og:
+                og = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', resp.text, re.IGNORECASE)
+            if not og:
+                og = re.search(r'<meta[^>]+(?:name|property)=["\']twitter:image["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
+            if og:
+                return clean_url(og.group(1))
+    except:
+        pass
+    return None
+
 def extract_image_url(entry):
+    img_url = None
+
+    # 1. Parsing des champs RSS média classiques
     if 'media_content' in entry:
         for m in entry.media_content:
             u = clean_url(m.get('url'))
-            if u: return u
-    if 'media_thumbnail' in entry:
+            if u: img_url = u; break
+    if not img_url and 'media_thumbnail' in entry:
         for m in entry.media_thumbnail:
             u = clean_url(m.get('url'))
-            if u: return u
-    if 'enclosures' in entry:
+            if u: img_url = u; break
+    if not img_url and 'enclosures' in entry:
         for enc in entry.enclosures:
             u = clean_url(enc.get('href') or enc.get('url'))
-            if u: return u
-    if 'links' in entry:
-        for link in entry.links:
-            href = link.get('href')
-            if href:
-                u = clean_url(href)
-                if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
-                    return u
+            if u: img_url = u; break
 
-    html_sources = []
-    for c in entry.get('content', []):
-        html_sources.append(c.get('value', ''))
-    if hasattr(entry, 'content_encoded'):
-        html_sources.append(entry.content_encoded)
-    html_sources.extend([entry.get('summary', ''), entry.get('description', '')])
+    # 2. Parsing du contenu HTML du flux RSS
+    if not img_url:
+        html_sources = []
+        for c in entry.get('content', []):
+            html_sources.append(c.get('value', ''))
+        if hasattr(entry, 'content_encoded'):
+            html_sources.append(entry.content_encoded)
+        html_sources.extend([entry.get('summary', ''), entry.get('description', '')])
 
-    for text_src in html_sources:
-        if not text_src: continue
-        # Extraction src, data-src, data-lazy-src, data-orig-file, data-large-file (Créapills / WordPress)
-        matches = re.findall(r'<img [^>]*(?:src|data-src|data-lazy-src|data-orig-file|data-large-file)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for src in matches:
-            u = clean_url(src)
-            if u: return u
-        # Extraction depuis les balises srcset
-        srcset_matches = re.findall(r'srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for srcset in srcset_matches:
-            urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
-            for src in urls:
+        for text_src in html_sources:
+            if not text_src: continue
+            matches = re.findall(r'<img [^>]*(?:data-src|data-lazy-src|data-orig-file|data-large-file|src)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+            for src in matches:
                 u = clean_url(src)
-                if u: return u
-        # Extraction d'URL d'image directe (incluant d'éventuels paramètres de requête WordPress)
-        url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
-        for um in url_matches:
-            u = clean_url(um)
-            if u: return u
-    return None
+                if u and not u.startswith("data:"):
+                    img_url = u
+                    break
+            if img_url: break
+
+            srcset_matches = re.findall(r'srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+            for srcset in srcset_matches:
+                urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
+                for src in urls:
+                    u = clean_url(src)
+                    if u and not u.startswith("data:"):
+                        img_url = u
+                        break
+                if img_url: break
+            if img_url: break
+
+            url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
+            for um in url_matches:
+                u = clean_url(um)
+                if u: img_url = u; break
+            if img_url: break
+
+    # 3. Récupération directe sur la page web si absente ou spécifique (Phototrend / Créapills)
+    link = entry.get("link", "")
+    if not img_url or "phototrend.fr" in link or "creapills.com" in link:
+        og_img = get_og_image(link)
+        if og_img:
+            img_url = og_img
+
+    return img_url
 
 def parse_entry_date(entry):
     for field in ['published_parsed', 'updated_parsed']:
