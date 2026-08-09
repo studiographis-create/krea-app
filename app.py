@@ -277,7 +277,8 @@ SOURCES = [
 
 EXCLUDED_CATEGORIES = [
     "developpement-personnel", "sante", "bien-etre", "politique", "fait-divers", "societe", "lifestyle", "psycho", "automobile",
-    "bons-plans", "soldes", "promo", "deals", "shopping", "forfaits", "telecom", "crypto", "bitcoin", "finance", "bourse", "immobilier", "electromenager"
+    "bons-plans", "soldes", "promo", "deals", "shopping", "forfaits", "telecom", "crypto", "bitcoin", "finance", "bourse", "immobilier", "electromenager",
+    "cinema", "cinéma", "a la tv", "à la tv", "programme tv", "programme-tv", "a la tele", "à la télé", "netflix", "disney+", "prime video", "series", "série", "séries", "box-office"
 ]
 
 KEYWORDS = {
@@ -415,9 +416,12 @@ def fetch_all_feeds():
                 parsed = feedparser.parse(resp.content)
                 for entry in parsed.entries[:4]:
                     link = entry.get("link", "#")
-                    if any(bad in link.lower() for bad in EXCLUDED_CATEGORIES): continue
                     title = clean_text(entry.get("title", ""))
                     summary = clean_text(entry.get("summary", entry.get("description", "")))
+                    
+                    check_text = f"{link} {title}".lower()
+                    if any(bad in check_text for bad in EXCLUDED_CATEGORIES): continue
+                    
                     dt = parse_entry_date(entry)
                     img = extract_image_url(entry)
                     cat = detect_category(title, summary, feed["name"])
