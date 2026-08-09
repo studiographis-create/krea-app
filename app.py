@@ -347,12 +347,12 @@ KEYWORDS = {
     "Graphisme": ["design graphique", "graphiste", "logo", "branding", "charte", "illustrator", "indesign"]
 }
 
-BADGE_PRIORITY = ["Photoshop", "Lightroom", "AI", "Graphisme", "Tutoriels", "Adobe", "Photo", "Expos photos", "Général"]
+BADGE_PRIORITY = ["Photoshop", "Lightroom", "AI", "Graphisme", "Tutoriels", "Adobe", "Photo", "Expos photos", "Tech"]
 
 CATEGORY_COLORS = {
     "Photoshop": "#38BDF8", "Lightroom": "#60A5FA", "Adobe": "#FF0000",
     "Photo": "#F59E0B", "Graphisme": "#EC4899", "Tutoriels": "#10B981", 
-    "Expos photos": "#E11D48", "AI": "#A855F7", "Général": "#64748B"
+    "Expos photos": "#E11D48", "AI": "#A855F7", "Tech": "#64748B"
 }
 
 def clean_text(raw_html):
@@ -475,9 +475,8 @@ def format_relative_date(dt):
     return dt.strftime("%d/%m/%Y")
 
 def detect_categories(title, summary, source_name):
-    # Classement explicite d'Apple Newsroom dans Général
     if source_name == "Apple Newsroom":
-        return ["Général"]
+        return ["Tech"]
 
     text = f"{title} {summary}".lower()
     title_low = title.lower()
@@ -498,7 +497,7 @@ def detect_categories(title, summary, source_name):
         cats.add("Photo")
         
     if not cats:
-        cats.add("Général")
+        cats.add("Tech")
 
     return list(cats)
 
@@ -506,12 +505,12 @@ def get_primary_badge(categories):
     for cat in BADGE_PRIORITY:
         if cat in categories:
             return cat
-    return "Général"
+    return "Tech"
 
 @st.dialog("▤ Aperçu de l'article")
 def open_preview_modal(article):
     st.session_state.read_articles.add(article["id"])
-    cat = article.get("category", "Général")
+    cat = article.get("category", "Tech")
     st.session_state.category_views[cat] = st.session_state.category_views.get(cat, 0) + 1
 
     if article.get("image_url"):
@@ -588,7 +587,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "Général", "☆ Favoris"]
+categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "Tech", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 col_source, col_search, col_date, col_view, col_refresh = st.columns([1.5, 1.8, 1.2, 1.2, 0.8])
