@@ -335,11 +335,13 @@ def get_og_image(link):
     if not link or not link.startswith("http"): return None
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        resp = requests.get(link, headers=headers, timeout=2)
+        resp = requests.get(link, headers=headers, timeout=2.5)
         if resp.status_code == 200:
             og = re.search(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
             if not og:
                 og = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\']', resp.text, re.IGNORECASE)
+            if not og:
+                og = re.search(r'<link[^>]+rel=["\']image_src["\'][^>]+href=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
             if og:
                 return clean_url(og.group(1))
     except:
@@ -368,7 +370,7 @@ def extract_image_url(entry):
                 if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
                     return u
 
-    # 2. Parsing HTML complet (Feed / Description / Content)
+    # 2. Parsing HTML complet (Feed / Description / Content / Picture / Source)
     html_sources = []
     for c in entry.get('content', []):
         if isinstance(c, dict):
@@ -386,7 +388,16 @@ def extract_image_url(entry):
     for text_src in html_sources:
         if not text_src: continue
         
-        # Inclus \b pour isoler src/data-src et éviter d'intercepter 'srcset'
+        # Extraction depuis les balises <source srcset="..."> (Picture HTML5 / Blind Magazine)
+        source_srcset = re.findall(r'<source [^>]*srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        for srcset in source_srcset:
+            urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
+            for src in urls:
+                u = clean_url(src)
+                if u and not u.startswith("data:"):
+                    return u
+
+        # Extraction depuis attributs d'images standard et lazy-loading
         img_attrs = re.findall(r'<img [^>]*(?:\bdata-orig-file|\bdata-large-file|\bdata-lazy-src|\bdata-src|\bsrc)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in img_attrs:
             u = clean_url(src)
@@ -406,7 +417,7 @@ def extract_image_url(entry):
             u = clean_url(um)
             if u: return u
 
-    # 3. Récupération OpenGraph directe sur la page web en secours
+    # 3. Récupération OpenGraph directe sur la page web en secours (Blind Magazine / Creapills)
     link = entry.get("link", "")
     if link:
         og_img = get_og_image(link)
@@ -709,7 +720,7 @@ st.markdown("""
           <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
           <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
           <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
