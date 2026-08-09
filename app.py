@@ -322,8 +322,10 @@ def clean_text(raw_html):
 def clean_url(url):
     if not url: return None
     url = url.strip()
+    if url.startswith("//"):
+        url = "https:" + url
     if url.startswith("http"):
-        if any(b in url.lower() for b in ["gravatar", "pixel", "icon", "logo", ".svg"]): return None
+        if any(b in url.lower() for b in ["gravatar", "pixel", "1x1", "blank.gif", "tracker", ".svg"]): return None
         return url
     return None
 
@@ -351,12 +353,14 @@ def extract_image_url(entry):
     html_sources = []
     for c in entry.get('content', []):
         html_sources.append(c.get('value', ''))
+    if hasattr(entry, 'content_encoded'):
+        html_sources.append(entry.content_encoded)
     html_sources.extend([entry.get('summary', ''), entry.get('description', '')])
 
     for text_src in html_sources:
         if not text_src: continue
-        # Extraction src, data-src, data-lazy-src (lazy-loading WordPress/Phototrend)
-        matches = re.findall(r'<img [^>]*(?:src|data-src|data-lazy-src)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        # Extraction src, data-src, data-lazy-src, data-orig-file, data-large-file (Créapills / WordPress)
+        matches = re.findall(r'<img [^>]*(?:src|data-src|data-lazy-src|data-orig-file|data-large-file)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in matches:
             u = clean_url(src)
             if u: return u
@@ -367,8 +371,8 @@ def extract_image_url(entry):
             for src in urls:
                 u = clean_url(src)
                 if u: return u
-        # Extraction d'URL d'image directe
-        url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)', text_src, re.IGNORECASE)
+        # Extraction d'URL d'image directe (incluant d'éventuels paramètres de requête WordPress)
+        url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
         for um in url_matches:
             u = clean_url(um)
             if u: return u
