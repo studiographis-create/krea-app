@@ -299,6 +299,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "Apple Newsroom", "url": "https://www.apple.com/fr/newsroom/rss-feed.rss"},
     {"name": "Numerama Tech", "url": "https://www.numerama.com/tech/feed/"},
     {"name": "01net", "url": "https://www.01net.com/actualites/feed/"},
     {"name": "Photo Actus", "url": "https://www.photoactus.com/blog-feed.xml"},
@@ -474,6 +475,10 @@ def format_relative_date(dt):
     return dt.strftime("%d/%m/%Y")
 
 def detect_categories(title, summary, source_name):
+    # Classement explicite d'Apple Newsroom dans Général
+    if source_name == "Apple Newsroom":
+        return ["Général"]
+
     text = f"{title} {summary}".lower()
     title_low = title.lower()
     cats = set()
