@@ -195,6 +195,7 @@ custom_css = """<style>
     .article-read { opacity: 0.65; filter: grayscale(15%); }
     .cat-badge { font-size: 0.70rem; font-weight: 800; padding: 3px 9px; border-radius: 12px; text-transform: uppercase; color: #0f172a; display: inline-block; margin-bottom: 6px; }
     .read-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.4); display: inline-block; margin-left: 6px; }
+    .tracked-badge { background-color: #8B5CF6; color: #ffffff; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; display: inline-block; margin-left: 6px; }
     .hero-badge { background-color: transparent; color: #F472B6; border: 1px solid #F472B6; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-bottom: 10px; }
 </style>"""
 
@@ -222,6 +223,7 @@ if "read_articles" not in st.session_state: st.session_state.read_articles = set
 if "category_views" not in st.session_state: st.session_state.category_views = {}
 if "articles_limit" not in st.session_state: st.session_state.articles_limit = 12
 if "search_input" not in st.session_state: st.session_state.search_input = ""
+if "tracked_keywords" not in st.session_state: st.session_state.tracked_keywords = ""
 
 st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
@@ -566,6 +568,20 @@ with col_refresh:
         st.cache_data.clear()
         st.rerun()
 
+# Section de Suivi de mots-clés personnalisés
+with st.expander("🎯 Suivi de mots-clés personnalisés (Veille sur mesure)"):
+    col_k1, col_k2 = st.columns([3, 1])
+    with col_k1:
+        st.session_state.tracked_keywords = st.text_input(
+            "Mots-clés suivis (séparés par des virgules) :",
+            value=st.session_state.tracked_keywords,
+            placeholder="ex: sony, fujifilm, impression, 8k, nikon..."
+        )
+    with col_k2:
+        st.write("")
+        st.write("")
+        filter_only_tracked = st.checkbox("Filtrer uniquement mes mots-clés")
+
 st.write("✦ **Tendances du moment :**")
 
 all_text = " ".join([f"{art['title']} {art['summary']}" for art in all_fetched]).lower()
@@ -594,9 +610,15 @@ for idx, tag in enumerate(dynamic_tags):
 st.divider()
 
 now_utc = datetime.now(timezone.utc)
+tracked_list = [k.strip().lower() for k in st.session_state.tracked_keywords.split(",") if k.strip()]
+
 filtered_articles = []
 for art in all_fetched:
     text_to_check = f"{art['title']} {art['summary']}".lower()
+    
+    # Vérification des mots-clés suivis
+    is_tracked = any(kw in text_to_check for kw in tracked_list) if tracked_list else False
+
     if selected_category == "☆ Favoris":
         if art["link"] not in st.session_state.bookmarks: continue
         cat_match = True
@@ -617,17 +639,23 @@ for art in all_fetched:
     elif selected_date_filter == "Ce mois-ci":
         date_match = (art["date"].month == now_utc.month and art["date"].year == now_utc.year)
 
-    if cat_match and source_match and search_match and date_match:
+    tracked_match = True
+    if filter_only_tracked and tracked_list:
+        tracked_match = is_tracked
+
+    if cat_match and source_match and search_match and date_match and tracked_match:
+        # Stockage d'un attribut dynamique pour l'affichage du badge suivi
+        art["is_tracked"] = is_tracked
         filtered_articles.append(art)
 
-if selected_category == "Tous" and not search_query.strip() and selected_date_filter == "Tout" and st.session_state.category_views:
+if selected_category == "Tous" and not search_query.strip() and selected_date_filter == "Tout" and not filter_only_tracked and st.session_state.category_views:
     filtered_articles.sort(key=lambda x: (st.session_state.category_views.get(x["category"], 0), x["date"]), reverse=True)
 
 if selected_category == "☆ Favoris" and filtered_articles:
     st.subheader(f"☆ Vos favoris ({len(filtered_articles)})")
 
 if filtered_articles:
-    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and selected_date_filter == "Tout" and not search_query.strip() and view_mode == "Grille")
+    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and selected_date_filter == "Tout" and not filter_only_tracked and not search_query.strip() and view_mode == "Grille")
     start_idx = 0
     if show_hero and len(filtered_articles) > 0:
         hero = filtered_articles[0]
@@ -639,6 +667,7 @@ if filtered_articles:
             st.markdown(f'<div class="{"article-read" if is_hero_read else ""}">', unsafe_allow_html=True)
             st.markdown('<span class="hero-badge">✦ À LA UNE</span>', unsafe_allow_html=True)
             if is_hero_read: st.markdown('<span class="read-badge">✓ Lu</span>', unsafe_allow_html=True)
+            if hero.get("is_tracked"): st.markdown('<span class="tracked-badge">🎯 Suivi</span>', unsafe_allow_html=True)
             
             c_img, c_txt = st.columns([1.2, 1])
             with c_img: st.markdown(f'<img src="{hero["image_url"]}" referrerpolicy="no-referrer" style="width:100%; height:260px; object-fit:cover; border-radius:12px;">', unsafe_allow_html=True)
@@ -675,7 +704,7 @@ if filtered_articles:
                 with st.container(border=True):
                     st.markdown(f'<div class="{"article-read" if is_read else ""}">', unsafe_allow_html=True)
                     st.markdown(f'<img src="{article["image_url"]}" referrerpolicy="no-referrer" style="width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:8px;">', unsafe_allow_html=True)
-                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else ''), unsafe_allow_html=True)
+                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else '') + ('<span class="tracked-badge">🎯 Suivi</span>' if article.get("is_tracked") else ''), unsafe_allow_html=True)
                     st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
@@ -701,7 +730,7 @@ if filtered_articles:
                 c_img, c_content = st.columns([0.8, 3.2])
                 with c_img: st.markdown(f'<img src="{article["image_url"]}" referrerpolicy="no-referrer" style="width:100%; height:100px; object-fit:cover; border-radius:8px;">', unsafe_allow_html=True)
                 with c_content:
-                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else ''), unsafe_allow_html=True)
+                    st.markdown(f'<span class="cat-badge" style="background-color:{cat_color};">{article["category"]}</span>' + ('<span class="read-badge">✓ Lu</span>' if is_read else '') + ('<span class="tracked-badge">🎯 Suivi</span>' if article.get("is_tracked") else ''), unsafe_allow_html=True)
                     st.caption(f"⌖ **{article['source']}** • {article['relative_date']}")
                     st.markdown(f"**{article['title']}**")
                     st.write(article['summary_short'])
