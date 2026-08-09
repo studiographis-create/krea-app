@@ -126,6 +126,38 @@ custom_css = """<style>
     }
     div[data-testid="stRadio"] label { color: #ffffff !important; font-weight: 700 !important; }
 
+    /* Correction visuelle sombre pour le bloc Expander */
+    div[data-testid="stExpander"] {
+        background-color: #161e2e !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stExpander"] details {
+        background-color: #161e2e !important;
+        border-radius: 14px !important;
+    }
+    div[data-testid="stExpander"] summary {
+        background-color: #161e2e !important;
+        color: #ffffff !important;
+        border-radius: 14px !important;
+    }
+    div[data-testid="stExpander"] summary:hover {
+        background-color: #1e293b !important;
+        color: #F472B6 !important;
+    }
+    div[data-testid="stExpander"] summary p, 
+    div[data-testid="stExpander"] summary span, 
+    div[data-testid="stExpander"] summary svg {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+    }
+    div[data-testid="stExpander"] div[role="region"] {
+        background-color: #161e2e !important;
+        color: #f1f5f9 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
     div[data-testid="stTextInput"] input {
         background-color: #f8fafc !important;
         color: #0f172a !important;
@@ -224,7 +256,6 @@ if "category_views" not in st.session_state: st.session_state.category_views = {
 if "articles_limit" not in st.session_state: st.session_state.articles_limit = 12
 if "search_input" not in st.session_state: st.session_state.search_input = ""
 
-# Récupération persistante des mots-clés suivis et de l'état de la case depuis l'URL
 if "tracked_keywords" not in st.session_state:
     st.session_state.tracked_keywords = st.query_params.get("tracked_keywords", "")
 
@@ -574,7 +605,7 @@ with col_refresh:
         st.cache_data.clear()
         st.rerun()
 
-# Section de Suivi de mots-clés personnalisés (avec persistance URL de l'input et du checkbox)
+# Section de Suivi de mots-clés personnalisés
 with st.expander("🎯 Suivi de mots-clés personnalisés (Veille sur mesure)"):
     col_k1, col_k2 = st.columns([3, 1])
     with col_k1:
