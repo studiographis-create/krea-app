@@ -67,7 +67,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Injection du favicon Krea
+# Injection du favicon Krea et détection du mode PWA (masque le bouton si l'app est installée)
 st.markdown(
     f"""<head>
     <link rel="icon" type="image/svg+xml" href="{svg_data_uri}">
@@ -93,9 +93,31 @@ st.markdown(
             doc.head.appendChild(link);
         }}
     }}
+
+    function checkPWAStandalone() {{
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+        if (isStandalone) {{
+            var doc = window.parent ? window.parent.document : document;
+            if (!doc) return;
+            var buttons = doc.querySelectorAll('button');
+            buttons.forEach(function(btn) {{
+                if (btn.textContent && btn.textContent.includes('Installer')) {{
+                    var col = btn.closest('div[data-testid="stColumn"]');
+                    if (col) {{
+                        col.style.display = 'none';
+                    }} else {{
+                        btn.style.display = 'none';
+                    }}
+                }}
+            }});
+        }}
+    }}
+
     setFavicon();
+    checkPWAStandalone();
     setTimeout(setFavicon, 300);
     setTimeout(setFavicon, 1000);
+    setInterval(checkPWAStandalone, 500);
 }})();
 </script>""",
     unsafe_allow_html=True
