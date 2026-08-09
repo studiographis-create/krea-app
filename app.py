@@ -32,6 +32,34 @@ KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"
 krea_b64_svg = base64.b64encode(KREA_SVG_ICON.encode('utf-8')).decode('utf-8')
 svg_data_uri = f"data:image/svg+xml;base64,{krea_b64_svg}"
 
+# SVG dédié pour illustration d'article manquante (ratio 600x350 anti-rognage)
+KREA_PLACEHOLDER_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350">
+  <defs>
+    <linearGradient id="ph_g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="ph_g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.3"/>
+    </linearGradient>
+    <radialGradient id="ph_bg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0b0f19"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="350" fill="url(#ph_bg)"/>
+  <g transform="translate(250, 125)">
+    <rect x="18" y="18" width="62" height="62" rx="14" fill="url(#ph_g2)" transform="rotate(-6 49 49)"/>
+    <rect x="12" y="12" width="62" height="62" rx="14" fill="url(#ph_g1)"/>
+    <text x="43" y="56" font-family="sans-serif" font-weight="900" font-size="44" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 43 56)">k</text>
+    <path d="M 72 6 Q 72 14 80 14 Q 72 14 72 22 Q 72 14 64 14 Q 72 14 72 6 Z" fill="#F472B6"/>
+  </g>
+</svg>"""
+
+krea_ph_b64 = base64.b64encode(KREA_PLACEHOLDER_SVG.encode('utf-8')).decode('utf-8')
+placeholder_data_uri = f"data:image/svg+xml;base64,{krea_ph_b64}"
+
 # Configuration de la page Streamlit
 st.set_page_config(
     page_title="Krea — L'Actu Créative & IA",
@@ -436,7 +464,7 @@ def fetch_all_feeds():
                         "date": dt,
                         "relative_date": format_relative_date(dt),
                         "category": cat,
-                        "image_url": img if img else svg_data_uri,
+                        "image_url": img if img else placeholder_data_uri,
                         "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
                     })
         except:
