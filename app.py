@@ -347,17 +347,27 @@ def extract_image_url(entry):
                 u = clean_url(href)
                 if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
                     return u
+
+    html_sources = []
     for c in entry.get('content', []):
-        text_src = c.get('value', '')
-        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        html_sources.append(c.get('value', ''))
+    html_sources.extend([entry.get('summary', ''), entry.get('description', '')])
+
+    for text_src in html_sources:
+        if not text_src: continue
+        # Extraction src, data-src, data-lazy-src (lazy-loading WordPress/Phototrend)
+        matches = re.findall(r'<img [^>]*(?:src|data-src|data-lazy-src)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in matches:
             u = clean_url(src)
             if u: return u
-    for text_src in [entry.get('summary', ''), entry.get('description', '')]:
-        matches = re.findall(r'<img [^>]*src=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
-        for src in matches:
-            u = clean_url(src)
-            if u: return u
+        # Extraction depuis les balises srcset
+        srcset_matches = re.findall(r'srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        for srcset in srcset_matches:
+            urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
+            for src in urls:
+                u = clean_url(src)
+                if u: return u
+        # Extraction d'URL d'image directe
         url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)', text_src, re.IGNORECASE)
         for um in url_matches:
             u = clean_url(um)
