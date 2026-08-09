@@ -299,6 +299,8 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "Musée Photo Charleroi", "url": "https://www.museephoto.be/rss.xml"},
+    {"name": "FOMU Antwerpen", "url": "https://fomu.be/en/rss"},
     {"name": "Apple Newsroom", "url": "https://www.apple.com/fr/newsroom/rss-feed.rss"},
     {"name": "Numerama Tech", "url": "https://www.numerama.com/tech/feed/"},
     {"name": "01net", "url": "https://www.01net.com/actualites/feed/"},
@@ -475,6 +477,8 @@ def format_relative_date(dt):
     return dt.strftime("%d/%m/%Y")
 
 def detect_categories(title, summary, source_name):
+    if source_name in ["Musée Photo Charleroi", "FOMU Antwerpen"]:
+        return ["Expos photos"]
     if source_name == "Apple Newsroom":
         return ["Tech"]
 
@@ -831,7 +835,7 @@ st.markdown("""
           <rect x="22" y="18" width="76" height="76" rx="18" fill="url(#layerGradFooter)" transform="rotate(-6 60 56)" />
           <rect x="15" y="12" width="76" height="76" rx="18" fill="url(#kreaGradFooter)" />
           <text x="53" y="66" font-family="sans-serif" font-weight="900" font-size="54" fill="#FFFFFF" text-anchor="middle" transform="rotate(-10 53 66)">k</text>
-          <path d="M 88 4 Q 88 14 98 14 Q 88 14 88 24 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
+          <path d="M 88 4 Q 88 14 98 14 Q 88 14 78 14 Q 88 14 88 4 Z" fill="#F472B6" />
         </svg>
     </div>
     <p style="color: #94A3B8; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; margin: 0;">Krea — by Graphis Studio</p>
