@@ -331,8 +331,23 @@ def clean_url(url):
         return url
     return None
 
+def get_og_image(link):
+    if not link or not link.startswith("http"): return None
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        resp = requests.get(link, headers=headers, timeout=2)
+        if resp.status_code == 200:
+            og = re.search(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
+            if not og:
+                og = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\']', resp.text, re.IGNORECASE)
+            if og:
+                return clean_url(og.group(1))
+    except:
+        pass
+    return None
+
 def extract_image_url(entry):
-    # 1. Vérification des structures d'enclos et contenus médias RSS
+    # 1. Structure RSS médias standard
     if 'media_content' in entry:
         for m in entry.media_content:
             u = clean_url(m.get('url'))
@@ -353,7 +368,7 @@ def extract_image_url(entry):
                 if u and any(ext in u.lower() for ext in ['.jpg', '.jpeg', '.png', '.webp']):
                     return u
 
-    # 2. Parsing de tout le contenu HTML présent dans le flux RSS
+    # 2. Parsing HTML complet (Feed / Description / Content)
     html_sources = []
     for c in entry.get('content', []):
         if isinstance(c, dict):
@@ -371,14 +386,13 @@ def extract_image_url(entry):
     for text_src in html_sources:
         if not text_src: continue
         
-        # Extraction depuis attributs d'images (standard, lazy-loading, WordPress Jetpack)
-        img_attrs = re.findall(r'<img [^>]*(?:src|data-src|data-lazy-src|data-orig-file|data-large-file)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
+        # Inclus \b pour isoler src/data-src et éviter d'intercepter 'srcset'
+        img_attrs = re.findall(r'<img [^>]*(?:\bdata-orig-file|\bdata-large-file|\bdata-lazy-src|\bdata-src|\bsrc)=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for src in img_attrs:
             u = clean_url(src)
             if u and not u.startswith("data:"):
                 return u
 
-        # Extraction depuis attributs srcset
         srcset_matches = re.findall(r'srcset=["\']([^"\']+)["\']', text_src, re.IGNORECASE)
         for srcset in srcset_matches:
             urls = [s.strip().split()[0] for s in srcset.split(',') if s.strip()]
@@ -387,11 +401,17 @@ def extract_image_url(entry):
                 if u and not u.startswith("data:"):
                     return u
 
-        # Recherche directe d'URLs d'images dans le texte HTML
         url_matches = re.findall(r'https?://[^\s<>"\']+\.(?:jpg|jpeg|png|webp)(?:\?[^\s<>"\']*)?', text_src, re.IGNORECASE)
         for um in url_matches:
             u = clean_url(um)
             if u: return u
+
+    # 3. Récupération OpenGraph directe sur la page web en secours
+    link = entry.get("link", "")
+    if link:
+        og_img = get_og_image(link)
+        if og_img:
+            return og_img
 
     return None
 
