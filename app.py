@@ -504,6 +504,10 @@ def fetch_all_feeds():
                     
                     dt = parse_entry_date(entry)
                     img = extract_image_url(entry)
+                    
+                    # Fallback systématique : si l'extraction échoue, on utilise l'image du logo Krea
+                    final_img = img if (img and img.startswith("http")) else placeholder_data_uri
+                    
                     cats = detect_categories(title, summary, feed["name"])
                     primary_badge = get_primary_badge(cats)
                     
@@ -517,7 +521,7 @@ def fetch_all_feeds():
                         "relative_date": format_relative_date(dt),
                         "category": primary_badge,
                         "categories": cats,
-                        "image_url": img if img else placeholder_data_uri,
+                        "image_url": final_img,
                         "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
                     })
         except:
