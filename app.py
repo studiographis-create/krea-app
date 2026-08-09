@@ -286,6 +286,7 @@ SOURCES = [
     {"name": "Blind Magazine", "url": "https://www.blind-magazine.com/fr/feed/"},
     {"name": "OuiOui Photo", "url": "https://blog.ouiouiphoto.fr/feed/"},
     {"name": "Emmanuel Correia (YouTube)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCTlFbHNGL9uAWKVJ2N-Jg3g"},
+    {"name": "Olivier Rocq (YouTube)", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCmAeCbipYZ8-ClCJj_gFtNg"},
 ]
 
 EXCLUDED_CATEGORIES = [
@@ -297,7 +298,7 @@ EXCLUDED_CATEGORIES = [
 
 KEYWORDS = {
     "Photoshop": ["photoshop", "psd", "retouche", "camera raw", "cameraraw", "bridge"],
-    "Lightroom": ["lightroom", "raw", "developpement photo"],
+    "Lightroom": ["lightroom", "raw", "developpement photo", "développement photo", "catalog", "catalogue"],
     "Tutoriels": ["tuto", "tutoriel", "guide technique", "astuce", "astuces", "formation", "cours", "pas a pas", "apprendre", "comment", "video", "vidéo"],
     "AI": ["ia", "intelligence artificielle", "midjourney", "chatgpt", "dall-e", "stable diffusion", "firefly"],
     "Adobe": ["adobe", "creative cloud", "acrobat", "substance", "adobe express", "illustrator", "indesign"],
@@ -505,7 +506,7 @@ def fetch_all_feeds():
                     dt = parse_entry_date(entry)
                     img = extract_image_url(entry)
                     
-                    # Fallback systématique : si l'extraction échoue, on utilise l'image du logo Krea
+                    # Fallback systématique : si l'extraction d'image échoue, on force le logo Krea
                     final_img = img if (img and img.startswith("http")) else placeholder_data_uri
                     
                     cats = detect_categories(title, summary, feed["name"])
