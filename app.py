@@ -442,8 +442,6 @@ def detect_categories(title, summary, source_name):
     for cat, kws in KEYWORDS.items():
         for kw in kws:
             if re.search(r'\b' + re.escape(kw) + r'\b', text):
-                # Pour les logiciels spécifiques, on exige que le mot-clé soit dans le titre 
-                # ou que ce soit un sujet central pour éviter les faux positifs dans le corps du texte.
                 if cat in ["Photoshop", "Lightroom"] and kw not in title_low:
                     continue
                 cats.add(cat)
@@ -549,12 +547,15 @@ st.markdown(
 categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "Général", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
-col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
+col_source, col_search, col_date, col_view, col_refresh = st.columns([1.5, 1.8, 1.2, 1.2, 0.8])
 with col_source:
     source_options = ["Toutes les sources"] + [s["name"] for s in SOURCES]
     selected_source = st.selectbox("Source :", source_options)
 with col_search:
     search_query = st.text_input("⌕ Mot-clé :", value=st.session_state.search_input, placeholder="ex: midjourney, portrait...")
+with col_date:
+    date_filter_options = ["Tout", "Dernières 24h", "7 derniers jours", "Ce mois-ci"]
+    selected_date_filter = st.selectbox("Période :", date_filter_options)
 with col_view:
     st.markdown('<div id="view-mode-marker"></div>', unsafe_allow_html=True)
     view_mode = st.radio("Affichage :", ["Grille", "Liste compacte"], horizontal=True)
@@ -592,6 +593,7 @@ for idx, tag in enumerate(dynamic_tags):
 
 st.divider()
 
+now_utc = datetime.now(timezone.utc)
 filtered_articles = []
 for art in all_fetched:
     text_to_check = f"{art['title']} {art['summary']}".lower()
@@ -605,18 +607,27 @@ for art in all_fetched:
 
     source_match = True if selected_source == "Toutes les sources" else (art["source"] == selected_source)
     search_match = True if not search_query.strip() else (search_query.lower().strip() in text_to_check)
+    
+    date_match = True
+    diff_secs = (now_utc - art["date"]).total_seconds()
+    if selected_date_filter == "Dernières 24h":
+        date_match = diff_secs <= 86400
+    elif selected_date_filter == "7 derniers jours":
+        date_match = diff_secs <= 7 * 86400
+    elif selected_date_filter == "Ce mois-ci":
+        date_match = (art["date"].month == now_utc.month and art["date"].year == now_utc.year)
 
-    if cat_match and source_match and search_match:
+    if cat_match and source_match and search_match and date_match:
         filtered_articles.append(art)
 
-if selected_category == "Tous" and not search_query.strip() and st.session_state.category_views:
+if selected_category == "Tous" and not search_query.strip() and selected_date_filter == "Tout" and st.session_state.category_views:
     filtered_articles.sort(key=lambda x: (st.session_state.category_views.get(x["category"], 0), x["date"]), reverse=True)
 
 if selected_category == "☆ Favoris" and filtered_articles:
     st.subheader(f"☆ Vos favoris ({len(filtered_articles)})")
 
 if filtered_articles:
-    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and not search_query.strip() and view_mode == "Grille")
+    show_hero = (selected_category == "Tous" and selected_source == "Toutes les sources" and selected_date_filter == "Tout" and not search_query.strip() and view_mode == "Grille")
     start_idx = 0
     if show_hero and len(filtered_articles) > 0:
         hero = filtered_articles[0]
