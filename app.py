@@ -474,7 +474,7 @@ def fetch_all_feeds():
             resp = requests.get(feed["url"], headers=headers, timeout=4)
             if resp.status_code == 200:
                 parsed = feedparser.parse(resp.content)
-                for entry in parsed.entries[:6]:  # Passage à 6 articles par flux
+                for entry in parsed.entries[:6]:
                     link = entry.get("link", "#")
                     title = clean_text(entry.get("title", ""))
                     summary = clean_text(entry.get("summary", entry.get("description", "")))
@@ -516,7 +516,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "☆ Favoris"]
+# Ajout de "Général" dans les choix de catégories
+categories = ["Tous", "Photoshop", "Lightroom", "Adobe", "Graphisme", "Photo", "Tutoriels", "Expos photos", "AI", "Général", "☆ Favoris"]
 selected_category = st.radio("Filtrer par catégorie :", categories, horizontal=True)
 
 col_source, col_search, col_view, col_refresh = st.columns([1.5, 2, 1.2, 0.8])
@@ -571,8 +572,7 @@ for art in all_fetched:
     elif selected_category == "Tous":
         cat_match = True
     else:
-        kw_list = KEYWORDS.get(selected_category, [])
-        cat_match = any(re.search(r'\b' + re.escape(kw) + r'\b', text_to_check) for kw in kw_list)
+        cat_match = (art["category"] == selected_category)
 
     source_match = True if selected_source == "Toutes les sources" else (art["source"] == selected_source)
     search_match = True if not search_query.strip() else (search_query.lower().strip() in text_to_check)
