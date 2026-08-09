@@ -436,11 +436,16 @@ def format_relative_date(dt):
 
 def detect_categories(title, summary, source_name):
     text = f"{title} {summary}".lower()
+    title_low = title.lower()
     cats = set()
     
     for cat, kws in KEYWORDS.items():
         for kw in kws:
             if re.search(r'\b' + re.escape(kw) + r'\b', text):
+                # Pour les logiciels spécifiques, on exige que le mot-clé soit dans le titre 
+                # ou que ce soit un sujet central pour éviter les faux positifs dans le corps du texte.
+                if cat in ["Photoshop", "Lightroom"] and kw not in title_low:
+                    continue
                 cats.add(cat)
                 break
 
