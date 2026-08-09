@@ -474,7 +474,7 @@ def fetch_all_feeds():
             resp = requests.get(feed["url"], headers=headers, timeout=4)
             if resp.status_code == 200:
                 parsed = feedparser.parse(resp.content)
-                for entry in parsed.entries[:4]:
+                for entry in parsed.entries[:6]:  # Passage à 6 articles par flux
                     link = entry.get("link", "#")
                     title = clean_text(entry.get("title", ""))
                     summary = clean_text(entry.get("summary", entry.get("description", "")))
