@@ -224,8 +224,12 @@ if "category_views" not in st.session_state: st.session_state.category_views = {
 if "articles_limit" not in st.session_state: st.session_state.articles_limit = 12
 if "search_input" not in st.session_state: st.session_state.search_input = ""
 
+# Récupération persistante des mots-clés suivis et de l'état de la case depuis l'URL
 if "tracked_keywords" not in st.session_state:
     st.session_state.tracked_keywords = st.query_params.get("tracked_keywords", "")
+
+if "filter_only_tracked" not in st.session_state:
+    st.session_state.filter_only_tracked = st.query_params.get("filter_only_tracked", "false").lower() == "true"
 
 st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
@@ -570,7 +574,7 @@ with col_refresh:
         st.cache_data.clear()
         st.rerun()
 
-# Section de Suivi de mots-clés personnalisés (avec persistance URL)
+# Section de Suivi de mots-clés personnalisés (avec persistance URL de l'input et du checkbox)
 with st.expander("🎯 Suivi de mots-clés personnalisés (Veille sur mesure)"):
     col_k1, col_k2 = st.columns([3, 1])
     with col_k1:
@@ -589,7 +593,17 @@ with st.expander("🎯 Suivi de mots-clés personnalisés (Veille sur mesure)"):
     with col_k2:
         st.write("")
         st.write("")
-        filter_only_tracked = st.checkbox("Filtrer uniquement mes mots-clés")
+        filter_only_tracked = st.checkbox(
+            "Filtrer uniquement mes mots-clés",
+            value=st.session_state.filter_only_tracked
+        )
+        if filter_only_tracked != st.session_state.filter_only_tracked:
+            st.session_state.filter_only_tracked = filter_only_tracked
+            if filter_only_tracked:
+                st.query_params["filter_only_tracked"] = "true"
+            else:
+                if "filter_only_tracked" in st.query_params:
+                    del st.query_params["filter_only_tracked"]
 
 st.write("✦ **Tendances du moment :**")
 
