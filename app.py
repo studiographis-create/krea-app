@@ -300,6 +300,7 @@ with col_inst:
 st.markdown("<br>", unsafe_allow_html=True)
 
 SOURCES = [
+    {"name": "Expos Photo FB", "url": "https://rss-bridge.org/bridge01/?action=display&bridge=FacebookBridge&context=Username&u=61557393565073&format=Atom"},
     {"name": "Musée Photo Charleroi", "url": "https://www.museephoto.be/rss.xml"},
     {"name": "FOMU Antwerpen", "url": "https://fomu.be/en/rss"},
     {"name": "Apple Newsroom", "url": "https://www.apple.com/fr/newsroom/rss-feed.rss"},
@@ -452,7 +453,7 @@ def format_relative_date(dt):
     return dt.strftime("%d/%m/%Y")
 
 def detect_categories(title, summary, source_name):
-    if source_name in ["Musée Photo Charleroi", "FOMU Antwerpen"]:
+    if source_name in ["Musée Photo Charleroi", "FOMU Antwerpen", "Expos Photo FB"]:
         return ["Expos photos"]
     if source_name == "Apple Newsroom":
         return ["Tech"]
