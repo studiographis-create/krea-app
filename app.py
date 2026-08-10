@@ -10,6 +10,7 @@ import time
 import base64
 import html
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # SVG pur HD du logo Krea (cartes violet/cyan, k incliné, étoile rose)
 KREA_SVG_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -373,27 +374,6 @@ def clean_url(url):
         return url
     return None
 
-def get_og_image(link):
-    if not link or not link.startswith("http"): return None
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
-        }
-        resp = requests.get(link, headers=headers, timeout=3)
-        if resp.status_code == 200:
-            og = re.search(r'<meta[^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\'][^>]+content=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
-            if not og:
-                og = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\'](?:og:image|twitter:image)["\']', resp.text, re.IGNORECASE)
-            if not og:
-                og = re.search(r'<link[^>]+rel=["\'](?:image_src|apple-touch-icon)["\'][^>]+href=["\']([^"\']+)["\']', resp.text, re.IGNORECASE)
-            if og:
-                return clean_url(og.group(1))
-    except:
-        pass
-    return None
-
 def extract_image_url(entry):
     if 'yt_videoid' in entry:
         return f"https://img.youtube.com/vi/{entry.yt_videoid}/hqdefault.jpg"
@@ -450,11 +430,6 @@ def extract_image_url(entry):
         for um in url_matches:
             u = clean_url(um)
             if u: return u
-
-    if link:
-        og_img = get_og_image(link)
-        if og_img:
-            return og_img
 
     return None
 
@@ -536,45 +511,54 @@ def open_preview_modal(article):
     with c2: st.link_button("✉ WhatsApp", f"https://api.whatsapp.com/send?text={encoded_title}%20{encoded_url}", use_container_width=True)
     with c3: st.link_button("↗ 𝕏", f"https://twitter.com/intent/tweet?text={encoded_title}&url={encoded_url}", use_container_width=True)
 
+def fetch_single_feed(feed):
+    feed_articles = []
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    try:
+        resp = requests.get(feed["url"], headers=headers, timeout=3)
+        if resp.status_code == 200:
+            parsed = feedparser.parse(resp.content)
+            for entry in parsed.entries[:6]:
+                link = entry.get("link", "#")
+                title = clean_text(entry.get("title", ""))
+                summary = clean_text(entry.get("summary", entry.get("description", entry.get("media_description", ""))))
+                
+                check_text = f"{link} {title}".lower()
+                if any(bad in check_text for bad in EXCLUDED_CATEGORIES): continue
+                
+                dt = parse_entry_date(entry)
+                img = extract_image_url(entry)
+                final_img = img if (img and img.startswith("http")) else placeholder_data_uri
+                
+                cats = detect_categories(title, summary, feed["name"])
+                primary_badge = get_primary_badge(cats)
+                
+                feed_articles.append({
+                    "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
+                    "title": title,
+                    "link": link,
+                    "source": feed["name"],
+                    "summary": summary,
+                    "date": dt,
+                    "relative_date": format_relative_date(dt),
+                    "category": primary_badge,
+                    "categories": cats,
+                    "image_url": final_img,
+                    "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
+                })
+    except:
+        pass
+    return feed_articles
+
 @st.cache_data(ttl=1800, show_spinner=False)
 def fetch_all_feeds():
     articles = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    for feed in SOURCES:
-        try:
-            resp = requests.get(feed["url"], headers=headers, timeout=4)
-            if resp.status_code == 200:
-                parsed = feedparser.parse(resp.content)
-                for entry in parsed.entries[:6]:
-                    link = entry.get("link", "#")
-                    title = clean_text(entry.get("title", ""))
-                    summary = clean_text(entry.get("summary", entry.get("description", entry.get("media_description", ""))))
-                    
-                    check_text = f"{link} {title}".lower()
-                    if any(bad in check_text for bad in EXCLUDED_CATEGORIES): continue
-                    
-                    dt = parse_entry_date(entry)
-                    img = extract_image_url(entry)
-                    final_img = img if (img and img.startswith("http")) else placeholder_data_uri
-                    
-                    cats = detect_categories(title, summary, feed["name"])
-                    primary_badge = get_primary_badge(cats)
-                    
-                    articles.append({
-                        "id": hashlib.md5((link + title).encode('utf-8')).hexdigest(),
-                        "title": title,
-                        "link": link,
-                        "source": feed["name"],
-                        "summary": summary,
-                        "date": dt,
-                        "relative_date": format_relative_date(dt),
-                        "category": primary_badge,
-                        "categories": cats,
-                        "image_url": final_img,
-                        "summary_short": summary[:160] + "..." if len(summary) > 160 else summary
-                    })
-        except:
-            continue
+    # Interrogation parallèle de toutes les sources simultanément via ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        future_to_feed = {executor.submit(fetch_single_feed, feed): feed for feed in SOURCES}
+        for future in as_completed(future_to_feed):
+            articles.extend(future.result())
+            
     articles.sort(key=lambda x: x["date"], reverse=True)
     return articles
 
